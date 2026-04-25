@@ -50,7 +50,7 @@ export default function AccountTypeSelection() {
 
               {/* Button */}
               <Link
-                to="/login"
+                to="/browse-projects"
                 className="inline-block font-cairo font-semibold bg-invest-teal text-white px-8 py-3 rounded-lg hover:bg-opacity-90 transition w-full text-center"
               >
                 اختر هذا الخيار
@@ -77,7 +77,7 @@ export default function AccountTypeSelection() {
 
               {/* Button */}
               <Link
-                to="/login"
+                to="/identity-verification"
                 className="inline-block font-cairo font-semibold bg-invest-teal text-white px-8 py-3 rounded-lg hover:bg-opacity-90 transition w-full text-center"
               >
                 اختر هذا الخيار

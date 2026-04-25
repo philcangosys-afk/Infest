@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, TrendingUp, ShieldCheck, Users, BarChart3 } from "lucide-react";
+import { ArrowRight, TrendingUp, ShieldCheck, Users, BarChart3, Briefcase, Handshake } from "lucide-react";
 
 export default function Index() {
   return (
@@ -7,15 +7,15 @@ export default function Index() {
       {/* Header */}
       <header className="fixed top-0 right-0 left-0 z-50 bg-white border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-invest-teal rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
+          <Link to="/" className="flex items-center gap-2 order-3">
             <span className="font-cairo font-bold text-xl text-invest-blue hidden sm:inline">
               استثمرك
             </span>
+            <div className="w-10 h-10 bg-invest-teal rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
           </Link>
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8 order-2">
             <a href="#" className="font-cairo text-sm text-text-dark hover:text-invest-teal transition">
               اتصل بنا
             </a>
@@ -25,10 +25,19 @@ export default function Index() {
             <a href="#" className="font-cairo text-sm text-text-dark hover:text-invest-teal transition">
               الميزات
             </a>
+            <a href="#" className="font-cairo text-sm text-text-dark hover:text-invest-teal transition">
+              لرواد الأعمال
+            </a>
+            <a href="#" className="font-cairo text-sm text-text-dark hover:text-invest-teal transition">
+              للمستثمرين
+            </a>
+            <a href="#" className="font-cairo text-sm text-text-dark hover:text-invest-teal transition">
+              استكشف المشاريع
+            </a>
           </nav>
           <Link
             to="/account-type"
-            className="font-cairo font-semibold text-sm bg-invest-blue text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition"
+            className="font-cairo font-semibold text-sm bg-invest-blue text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition order-1"
           >
             سجل الدخول
           </Link>
@@ -39,8 +48,8 @@ export default function Index() {
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Right side - Text and CTA */}
-            <div className="lg:order-2 flex flex-col justify-center">
+            {/* Text and CTA - Left (visually) */}
+            <div className="flex flex-col justify-center lg:order-2">
               <h1 className="font-cairo text-4xl sm:text-5xl lg:text-6xl font-bold text-invest-blue leading-tight mb-6">
                 ربط الأفكار الذكية بالاستثمارات الموثوقة
               </h1>
@@ -52,17 +61,20 @@ export default function Index() {
                   to="/account-type"
                   className="font-cairo font-semibold bg-invest-blue text-white px-8 py-4 rounded-lg hover:bg-blue-800 transition inline-flex items-center justify-center gap-2 group"
                 >
-                  ابدأ الآن
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
+                  ابدأ كمستثمر
+                  <ArrowRight className="w-5 h-5 group-hover:-translate-x-1 transition" />
                 </Link>
-                <button className="font-cairo font-semibold border-2 border-invest-blue text-invest-blue px-8 py-4 rounded-lg hover:bg-light-gray transition">
-                  اعرف المزيد
-                </button>
+                <Link
+                  to="/account-type"
+                  className="font-cairo font-semibold bg-invest-teal text-white px-8 py-4 rounded-lg hover:bg-opacity-90 transition inline-flex items-center justify-center gap-2"
+                >
+                  ابدأ كرائد أعمال
+                </Link>
               </div>
             </div>
 
-            {/* Left side - Illustration */}
-            <div className="lg:order-1 relative h-96 lg:h-full min-h-96">
+            {/* Illustration - Right (visually) */}
+            <div className="relative h-96 lg:h-full min-h-96 lg:order-1">
               <div className="absolute inset-0 bg-gradient-to-br from-invest-blue to-invest-teal rounded-2xl opacity-10"></div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative w-full h-full">
@@ -129,37 +141,57 @@ export default function Index() {
       {/* Statistics Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {/* Stat 1 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {/* Stat 1 - Projects */}
             <div className="text-center">
-              <div className="font-cairo font-bold text-4xl lg:text-5xl text-invest-teal mb-3">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-invest-teal/10 rounded-xl flex items-center justify-center">
+                  <Briefcase className="w-8 h-8 text-invest-teal" />
+                </div>
+              </div>
+              <div className="font-cairo font-bold text-3xl lg:text-4xl text-invest-blue mb-2">
                 500+
               </div>
-              <p className="font-cairo text-dark-gray">مشروع مسجل</p>
+              <p className="font-cairo text-sm lg:text-base text-dark-gray">مشروع مسجل</p>
             </div>
 
-            {/* Stat 2 */}
+            {/* Stat 2 - Investors */}
             <div className="text-center">
-              <div className="font-cairo font-bold text-4xl lg:text-5xl text-invest-teal mb-3">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-invest-teal/10 rounded-xl flex items-center justify-center">
+                  <Users className="w-8 h-8 text-invest-teal" />
+                </div>
+              </div>
+              <div className="font-cairo font-bold text-3xl lg:text-4xl text-invest-blue mb-2">
                 1000+
               </div>
-              <p className="font-cairo text-dark-gray">مستثمر نشط</p>
+              <p className="font-cairo text-sm lg:text-base text-dark-gray">مستثمر نشط</p>
             </div>
 
-            {/* Stat 3 */}
+            {/* Stat 3 - Entrepreneurs */}
             <div className="text-center">
-              <div className="font-cairo font-bold text-4xl lg:text-5xl text-invest-teal mb-3">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-invest-teal/10 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-8 h-8 text-invest-teal" />
+                </div>
+              </div>
+              <div className="font-cairo font-bold text-3xl lg:text-4xl text-invest-blue mb-2">
+                2000+
+              </div>
+              <p className="font-cairo text-sm lg:text-base text-dark-gray">رائد أعمال</p>
+            </div>
+
+            {/* Stat 4 - Deals */}
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-invest-teal/10 rounded-xl flex items-center justify-center">
+                  <Handshake className="w-8 h-8 text-invest-teal" />
+                </div>
+              </div>
+              <div className="font-cairo font-bold text-3xl lg:text-4xl text-invest-blue mb-2">
                 50+
               </div>
-              <p className="font-cairo text-dark-gray">صفقة منجزة</p>
-            </div>
-
-            {/* Stat 4 */}
-            <div className="text-center">
-              <div className="font-cairo font-bold text-4xl lg:text-5xl text-invest-teal mb-3">
-                95%
-              </div>
-              <p className="font-cairo text-dark-gray">معدل الرضا</p>
+              <p className="font-cairo text-sm lg:text-base text-dark-gray">صفقة منجزة</p>
             </div>
           </div>
         </div>
