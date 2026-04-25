@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        cairo: ["Cairo", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +61,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Investment platform specific colors
+        "invest-blue": "hsl(var(--primary-blue))",
+        "invest-teal": "hsl(var(--accent-teal))",
+        "invest-green": "hsl(var(--success-green))",
+        "invest-orange": "hsl(var(--warning-orange))",
+        "invest-red": "hsl(var(--danger-red))",
+        "text-dark": "hsl(var(--text-dark))",
+        "light-gray": "hsl(var(--light-gray))",
+        "dark-gray": "hsl(var(--dark-gray))",
       },
       borderRadius: {
         lg: "var(--radius)",
