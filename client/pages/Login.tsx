@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "./Placeholder";
+import LoginPage from "./LoginPage";
 
 export default function Login() {
-  return <PlaceholderPage title="تسجيل الدخول" description="صفحة تسجيل الدخول قيد الإنشاء" />;
+  return <LoginPage />;
 }

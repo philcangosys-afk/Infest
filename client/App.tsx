@@ -1,7 +1,4 @@
-import "./global.css";
-
 import { Toaster } from "@/components/ui/toaster";
-import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,14 +6,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import AccountTypeSelection from "./pages/AccountTypeSelection";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import BrowseProjects from "./pages/BrowseProjects";
 import IdentityVerification from "./pages/IdentityVerification";
+import SubmitProject from "./pages/SubmitProject";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+export const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -26,8 +25,10 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/account-type" element={<AccountTypeSelection />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/browse-projects" element={<BrowseProjects />} />
           <Route path="/identity-verification" element={<IdentityVerification />} />
+          <Route path="/submit-project" element={<SubmitProject />} />
           <Route path="/dashboard" element={<Dashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
@@ -37,4 +38,4 @@ const App = () => (
   </QueryClientProvider>
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+export default App;
