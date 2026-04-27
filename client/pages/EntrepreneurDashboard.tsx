@@ -235,10 +235,13 @@ export default function EntrepreneurDashboard() {
           </div>
 
           {/* Incoming Requests Section */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="font-cairo font-bold text-xl text-text-dark mb-6">
-              الطلبات الواردة من المستثمرين
-            </h2>
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <div className="mb-8">
+              <h2 className="font-cairo font-bold text-3xl text-text-dark">
+                الطلبات الواردة من المستثمرين
+              </h2>
+              <p className="font-cairo text-dark-gray mt-2">تفاعل مع طلبات الاستثمار الجديدة</p>
+            </div>
             <div className="space-y-4">
               {requests.map((request) => (
                 <div
