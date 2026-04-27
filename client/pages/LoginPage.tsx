@@ -30,31 +30,31 @@ export default function LoginPage() {
             </p>
 
             {/* Email Field */}
-            <div className="mb-6">
-              <label className="font-cairo block text-sm font-semibold text-text-dark mb-2">
+            <div className="mb-8">
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
                 البريد الإلكتروني
               </label>
               <input
                 type="email"
                 placeholder="example@email.com"
-                className="w-full px-4 py-3 border border-light-gray rounded-lg focus:border-invest-teal focus:outline-none font-cairo text-sm transition"
+                className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
               />
             </div>
 
             {/* Password Field */}
             <div className="mb-2">
-              <label className="font-cairo block text-sm font-semibold text-text-dark mb-2">
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
                 كلمة المرور
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="أدخل كلمة المرور"
-                  className="w-full px-4 py-3 pr-12 border border-light-gray rounded-lg focus:border-invest-teal focus:outline-none font-cairo text-sm transition"
+                  className="w-full px-6 py-4 pr-14 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
                 />
                 <button
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-gray hover:text-invest-blue transition"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-gray hover:text-invest-blue transition p-2 hover:bg-light-gray rounded-lg"
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -66,40 +66,40 @@ export default function LoginPage() {
             </div>
 
             {/* Forgot Password Link */}
-            <div className="text-right mb-8">
-              <a href="#" className="font-cairo text-sm text-invest-teal hover:underline">
+            <div className="text-right mb-10">
+              <a href="#" className="font-cairo text-sm font-bold text-invest-teal hover:underline">
                 هل نسيت كلمة المرور؟
               </a>
             </div>
 
             {/* Login Button */}
-            <button className="w-full py-3 bg-invest-blue text-white rounded-lg font-cairo font-semibold text-lg hover:bg-blue-800 transition mb-6">
+            <button className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mb-8 shadow-lg hover:scale-105">
               دخول
             </button>
 
             {/* Divider */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-light-gray"></div>
-              <span className="font-cairo text-sm text-dark-gray">أو</span>
+              <span className="font-cairo text-sm text-dark-gray font-semibold">أو</span>
               <div className="flex-1 h-px bg-light-gray"></div>
             </div>
 
             {/* Social Login Buttons */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <button className="py-3 border-2 border-light-gray rounded-lg font-cairo font-semibold text-sm hover:bg-light-gray transition flex items-center justify-center gap-2">
-                <span className="text-xl">🔵</span>
-                <span className="hidden sm:inline">Google</span>
+            <div className="grid grid-cols-2 gap-4 mb-10">
+              <button className="py-4 border-2 border-light-gray rounded-xl font-cairo font-bold text-sm hover:border-invest-teal hover:bg-light-gray transition-all duration-200 flex items-center justify-center gap-3 group">
+                <span className="text-2xl group-hover:scale-110 transition">🔵</span>
+                <span className="hidden sm:inline group-hover:text-invest-teal">Google</span>
               </button>
-              <button className="py-3 border-2 border-light-gray rounded-lg font-cairo font-semibold text-sm hover:bg-light-gray transition flex items-center justify-center gap-2">
-                <span className="text-xl">🍎</span>
-                <span className="hidden sm:inline">Apple</span>
+              <button className="py-4 border-2 border-light-gray rounded-xl font-cairo font-bold text-sm hover:border-invest-teal hover:bg-light-gray transition-all duration-200 flex items-center justify-center gap-3 group">
+                <span className="text-2xl group-hover:scale-110 transition">🍎</span>
+                <span className="hidden sm:inline group-hover:text-invest-teal">Apple</span>
               </button>
             </div>
 
             {/* Sign Up Link */}
-            <p className="font-cairo text-center text-dark-gray">
+            <p className="font-cairo text-center text-dark-gray text-lg">
               ليس لديك حساب؟{" "}
-              <Link to="/signup" className="text-invest-teal font-semibold hover:underline">
+              <Link to="/signup" className="text-invest-teal font-bold hover:underline">
                 تسجيل جديد
               </Link>
             </p>

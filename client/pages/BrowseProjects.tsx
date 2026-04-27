@@ -350,24 +350,24 @@ export default function BrowseProjects() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-center gap-2 mt-12">
-              <button className="px-3 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo hover:bg-light-gray transition">
-                السابق
+            <div className="flex items-center justify-center gap-3 mt-16 py-8">
+              <button className="px-5 py-3 rounded-xl border-2 border-light-gray text-dark-gray font-cairo font-bold hover:border-invest-teal hover:text-invest-teal transition-all duration-200">
+                ← السابق
               </button>
               {[1, 2, 3, 4, 5, 6].map((num) => (
                 <button
                   key={num}
-                  className={`px-3 py-2 rounded-lg font-cairo font-semibold text-sm ${
+                  className={`px-4 py-3 rounded-xl font-cairo font-bold text-sm transition-all duration-200 ${
                     num === 1
-                      ? "bg-invest-teal text-white"
-                      : "border border-light-gray text-dark-gray hover:bg-light-gray transition"
+                      ? "bg-gradient-to-r from-invest-teal to-invest-teal/90 text-white shadow-lg hover:shadow-xl"
+                      : "border-2 border-light-gray text-dark-gray hover:border-invest-teal hover:text-invest-teal"
                   }`}
                 >
                   {num}
                 </button>
               ))}
-              <button className="px-3 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo hover:bg-light-gray transition">
-                التالي
+              <button className="px-5 py-3 rounded-xl border-2 border-light-gray text-dark-gray font-cairo font-bold hover:border-invest-teal hover:text-invest-teal transition-all duration-200">
+                التالي →
               </button>
             </div>
           </div>

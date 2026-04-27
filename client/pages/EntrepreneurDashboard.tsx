@@ -133,26 +133,27 @@ export default function EntrepreneurDashboard() {
         {/* Page Content */}
         <div className="p-8">
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { icon: Briefcase, label: "عدد مشاريعي", value: "3", color: "text-blue-600" },
-              { icon: Users, label: "طلبات جديدة", value: "2", color: "text-green-600" },
-              { icon: MessageCircle, label: "رسائل جديدة", value: "5", color: "text-purple-600" },
-              { icon: Heart, label: "نسبة التحقق", value: "85%", color: "text-red-600" }
+              { icon: Briefcase, label: "عدد مشاريعي", value: "3", color: "from-blue-100 to-blue-200", iconColor: "text-invest-blue", bgColor: "bg-blue-500" },
+              { icon: Users, label: "طلبات جديدة", value: "2", color: "from-green-100 to-green-200", iconColor: "text-invest-green", bgColor: "bg-green-500" },
+              { icon: MessageCircle, label: "رسائل جديدة", value: "5", color: "from-purple-100 to-purple-200", iconColor: "text-purple-600", bgColor: "bg-purple-500" },
+              { icon: Heart, label: "نسبة التحقق", value: "85%", color: "from-orange-100 to-orange-200", iconColor: "text-invest-orange", bgColor: "bg-orange-500" }
             ].map((stat, idx) => {
               const Icon = stat.icon;
               return (
-                <div key={idx} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-cairo text-sm text-dark-gray mb-2">{stat.label}</p>
-                      <p className={`font-cairo font-bold text-4xl ${stat.color}`}>
-                        {stat.value}
-                      </p>
+                <div key={idx} className="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className={`w-7 h-7 ${stat.iconColor}`} />
                     </div>
-                    <div className="w-12 h-12 bg-light-gray rounded-lg flex items-center justify-center">
-                      <Icon className={`w-6 h-6 ${stat.color}`} />
-                    </div>
+                  </div>
+                  <p className="font-cairo text-sm text-dark-gray font-semibold mb-2">{stat.label}</p>
+                  <p className="font-cairo font-bold text-5xl text-text-dark">
+                    {stat.value}
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-light-gray">
+                    <p className="font-cairo text-xs text-invest-teal font-bold">↑ 12% من الشهر الماضي</p>
                   </div>
                 </div>
               );
@@ -160,10 +161,18 @@ export default function EntrepreneurDashboard() {
           </div>
 
           {/* Active Projects Section */}
-          <div className="bg-white rounded-xl p-6 mb-12 shadow-sm">
-            <h2 className="font-cairo font-bold text-xl text-text-dark mb-6">
-              مشاريعي النشطة
-            </h2>
+          <div className="bg-white rounded-2xl p-8 mb-12 shadow-lg">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="font-cairo font-bold text-3xl text-text-dark">
+                  مشاريعي النشطة
+                </h2>
+                <p className="font-cairo text-dark-gray mt-2">إدارة وتتبع مشاريعك الحالية</p>
+              </div>
+              <button className="px-6 py-3 bg-invest-teal text-white rounded-xl font-cairo font-bold text-sm hover:shadow-lg transition-all duration-200">
+                ➕ مشروع جديد
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
