@@ -99,9 +99,9 @@ export default function Index() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F7f0a4564e10744da98b8f1029aa8c5f2%2Fa3e69d6032c542e1bf773a404542304a?format=webp&width=800&height=1200"
+              src="https://cdn.builder.io/api/v1/image/assets%2F7f0a4564e10744da98b8f1029aa8c5f2%2Fa3e69d6032c542e1bf773a404542304a?format=png"
               alt="Nile Invest AI"
-              className="w-12 h-12 rounded-2xl object-cover shadow-md group-hover:shadow-xl transition"
+              className="w-12 h-12 object-contain shadow-md group-hover:shadow-xl transition"
             />
             <div className="hidden sm:block">
               <p className="font-cairo font-bold text-xl text-invest-blue leading-none">Nile Invest AI</p>
@@ -554,9 +554,9 @@ export default function Index() {
           <div>
             <Link to="/" className="flex items-center gap-3 mb-4">
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F7f0a4564e10744da98b8f1029aa8c5f2%2Fa3e69d6032c542e1bf773a404542304a?format=webp&width=800&height=1200"
+                src="https://cdn.builder.io/api/v1/image/assets%2F7f0a4564e10744da98b8f1029aa8c5f2%2Fa3e69d6032c542e1bf773a404542304a?format=png"
                 alt="Nile Invest AI"
-                className="w-11 h-11 rounded-2xl object-cover shadow"
+                className="w-11 h-11 object-contain shadow"
               />
               <span className="font-cairo font-bold text-xl text-invest-blue">Nile Invest AI</span>
             </Link>
