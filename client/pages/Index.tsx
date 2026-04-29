@@ -584,7 +584,7 @@ export default function Index() {
           ))}
         </div>
         <div className="max-w-7xl mx-auto pt-6 border-t border-light-gray flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-cairo text-sm text-dark-gray">© 2024 Nile Invest AI. جميع الحقوق محفوظة.</p>
+          <p className="font-cairo text-sm text-dark-gray">© 2026 Nile Invest AI. جميع الحقوق محفوظة.</p>
           <p className="font-cairo text-sm text-dark-gray">صنع بحب 💚 في السودان</p>
         </div>
       </footer>
