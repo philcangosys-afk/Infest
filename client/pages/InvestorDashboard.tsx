@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, Bell, Eye, Heart, Send, Briefcase, Search, User, MessageCircle, Settings } from "lucide-react";
+import { TrendingUp, Bell, Eye, Heart, Send, Briefcase, Search, User, MessageCircle, Settings, Bot, Wand2, Calculator } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile" | "settings";
 
 export default function InvestorDashboard() {
   const [activeSection, setActiveSection] = useState<InvestorSection>("dashboard");
+  const [advisorTask, setAdvisorTask] = useState<"feasibility" | "compare" | "returns">("feasibility");
 
   const suggestedProjects = [
     { id: 1, name: "منصة التعليم الذكي", founder: "زين خلف الله", amount: "2,500,000 ج.س", rating: 4.8 },
@@ -129,6 +130,79 @@ export default function InvestorDashboard() {
                       <p className="font-cairo text-sm text-invest-teal mt-1">{p.amount}</p>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-light-gray">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-invest-blue/10 flex items-center justify-center">
+                      <Bot className="w-5 h-5 text-invest-blue" />
+                    </div>
+                    <div>
+                      <h2 className="font-cairo font-bold text-xl text-text-dark">مستشار المستثمر الذكي</h2>
+                      <p className="font-cairo text-xs text-dark-gray">تحليل سريع للجدوى والعائد قبل اتخاذ قرار الاستثمار</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-invest-teal/10 text-invest-teal font-cairo text-xs font-bold">
+                    <Wand2 className="w-3.5 h-3.5" />
+                    AI Assistant
+                  </span>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-2 mb-4">
+                  {[
+                    { key: "feasibility", label: "تحليل الجدوى" },
+                    { key: "compare", label: "قارن المشاريع" },
+                    { key: "returns", label: "احسب العائد" },
+                  ].map((action) => (
+                    <button
+                      key={action.key}
+                      onClick={() => setAdvisorTask(action.key as "feasibility" | "compare" | "returns")}
+                      className={`px-4 py-2.5 rounded-xl border font-cairo text-sm font-semibold transition ${
+                        advisorTask === action.key
+                          ? "bg-invest-teal text-white border-invest-teal"
+                          : "bg-white text-dark-gray border-light-gray hover:border-invest-blue hover:text-invest-blue"
+                      }`}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl bg-light-gray/50 border border-light-gray max-w-2xl">
+                    <p className="font-cairo text-sm text-dark-gray">
+                      أرغب في تقييم مشروع عقاري في الخرطوم، هل يمكنك تحليل الجدوى الاستثمارية؟
+                    </p>
+                  </div>
+
+                  {advisorTask === "feasibility" && (
+                    <div className="p-4 rounded-xl bg-invest-blue text-white max-w-3xl mr-auto">
+                      <p className="font-cairo text-sm leading-7">
+                        بناءً على البيانات المدخلة: العائد المتوقع على الاستثمار (ROI) حوالي 16-18% سنويًا،
+                        وفترة الاسترداد التقديرية 5.5 سنوات مع مستوى مخاطرة متوسط.
+                      </p>
+                    </div>
+                  )}
+
+                  {advisorTask === "compare" && (
+                    <div className="p-4 rounded-xl bg-invest-blue text-white max-w-3xl mr-auto">
+                      <p className="font-cairo text-sm leading-7">
+                        مقارنة سريعة: مشروع التعليم الذكي يحقق نموًا أسرع للمستخدمين، بينما مشروع الزراعة يقدم
+                        استقرارًا أعلى في التدفق النقدي. التنويع بينهما يقلل المخاطر الإجمالية.
+                      </p>
+                    </div>
+                  )}
+
+                  {advisorTask === "returns" && (
+                    <div className="p-4 rounded-xl bg-invest-blue text-white max-w-3xl mr-auto">
+                      <p className="font-cairo text-sm leading-7">
+                        <span className="inline-flex items-center gap-1 ml-1 font-bold"><Calculator className="w-4 h-4" />تقدير العائد:</span>
+                        عند استثمار 2,000,000 ج.س بعائد سنوي 17%، العائد السنوي المتوقع ≈ 340,000 ج.س قبل الرسوم.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </>

@@ -14,6 +14,8 @@ import {
   Settings,
   User,
   FolderOpen,
+  Bot,
+  Wand2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -28,6 +30,7 @@ type SectionKey =
 
 export default function EntrepreneurDashboard() {
   const [activeSection, setActiveSection] = useState<SectionKey>("dashboard");
+  const [advisorMode, setAdvisorMode] = useState<"pitch" | "financial" | "requests">("pitch");
 
   const projects = [
     {
@@ -213,6 +216,75 @@ export default function EntrepreneurDashboard() {
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h2 className="font-cairo font-bold text-2xl mb-4">ملخص سريع</h2>
                 <p className="font-cairo text-dark-gray">لديك 2 طلبات استثمار جديدة و 5 رسائل غير مقروءة.</p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-light-gray">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-invest-teal/10 flex items-center justify-center">
+                      <Bot className="w-5 h-5 text-invest-teal" />
+                    </div>
+                    <div>
+                      <h2 className="font-cairo font-bold text-xl text-text-dark">مستشار رائد الأعمال الذكي</h2>
+                      <p className="font-cairo text-xs text-dark-gray">مخصص لتحسين عرض مشروعك قبل التواصل مع المستثمرين</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-invest-blue/10 text-invest-blue font-cairo text-xs font-bold">
+                    <Wand2 className="w-3.5 h-3.5" />
+                    AI Advisor
+                  </span>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-2 mb-4">
+                  {[
+                    { key: "pitch", label: "تحسين عرض المشروع" },
+                    { key: "financial", label: "خطة مالية أولية" },
+                    { key: "requests", label: "الرد على المستثمرين" },
+                  ].map((option) => (
+                    <button
+                      key={option.key}
+                      onClick={() => setAdvisorMode(option.key as "pitch" | "financial" | "requests")}
+                      className={`px-4 py-2.5 rounded-xl border font-cairo text-sm font-semibold transition ${
+                        advisorMode === option.key
+                          ? "bg-invest-blue text-white border-invest-blue"
+                          : "bg-white text-dark-gray border-light-gray hover:border-invest-teal hover:text-invest-teal"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                {advisorMode === "pitch" && (
+                  <div className="rounded-xl border border-light-gray p-4 bg-light-gray/40">
+                    <p className="font-cairo text-sm font-bold text-text-dark mb-2">اقتراح سريع لعرضك التمويلي</p>
+                    <p className="font-cairo text-sm text-dark-gray leading-7">
+                      ركّز على: المشكلة في السوق السوداني، حجم الطلب المحلي، وكيف سيزيد التمويل من عدد العملاء خلال 6 أشهر.
+                      أضف رقمين واضحين: تكلفة اكتساب العميل ومتوسط الإيراد الشهري.
+                    </p>
+                  </div>
+                )}
+
+                {advisorMode === "financial" && (
+                  <div className="rounded-xl border border-light-gray p-4 bg-light-gray/40">
+                    <p className="font-cairo text-sm font-bold text-text-dark mb-2">خطة مالية مقترحة</p>
+                    <ul className="space-y-2 font-cairo text-sm text-dark-gray list-disc pr-5">
+                      <li>40% لتطوير المنتج وتحسين التجربة.</li>
+                      <li>35% للتسويق والمبيعات في الخرطوم والولايات الرئيسية.</li>
+                      <li>25% للتشغيل وبناء فريق أساسي لمدة 8 أشهر.</li>
+                    </ul>
+                  </div>
+                )}
+
+                {advisorMode === "requests" && (
+                  <div className="rounded-xl border border-light-gray p-4 bg-light-gray/40">
+                    <p className="font-cairo text-sm font-bold text-text-dark mb-2">رد مقترح على المستثمرين</p>
+                    <p className="font-cairo text-sm text-dark-gray leading-7">
+                      شكرًا لاهتمامكم. أرفقنا تحديثًا بالمؤشرات الحالية، ونقترح اجتماعًا قصيرًا لعرض خطة النمو المتوقعة
+                      ونموذج العائد خلال الربعين القادمين.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
