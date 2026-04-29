@@ -7,6 +7,33 @@ type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "m
 export default function InvestorDashboard() {
   const [activeSection, setActiveSection] = useState<InvestorSection>("dashboard");
   const [advisorTask, setAdvisorTask] = useState<"feasibility" | "compare" | "returns">("feasibility");
+  const [advisorInput, setAdvisorInput] = useState("");
+  const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
+    {
+      id: 1,
+      role: "assistant",
+      text: "مرحبًا، أنا مستشار المستثمر الذكي. اكتب أي مشروع وسأقدم لك تحليلًا سريعًا للجدوى والعائد.",
+    },
+  ]);
+
+  const sendAdvisorMessage = () => {
+    const message = advisorInput.trim();
+    if (!message) return;
+
+    const modeReply =
+      advisorTask === "feasibility"
+        ? "تحليل الجدوى: ابدأ بمراجعة التدفق النقدي المتوقع، نسبة الإشغال/المبيعات، ومخاطر السوق قبل اتخاذ القرار."
+        : advisorTask === "compare"
+          ? "المقارنة: قارن بين معدل النمو، فترة الاسترداد، وخبرة الفريق التشغيلي لتحديد الخيار الأكثر توازنًا."
+          : "تقدير العائد: أدخل مبلغ الاستثمار والعائد السنوي المتوقع لأحسب لك صافي العائد بصورة مبسطة.";
+
+    setAdvisorChat((prev) => [
+      ...prev,
+      { id: prev.length + 1, role: "user", text: message },
+      { id: prev.length + 2, role: "assistant", text: modeReply },
+    ]);
+    setAdvisorInput("");
+  };
 
   const suggestedProjects = [
     { id: 1, name: "منصة التعليم الذكي", founder: "زين خلف الله", amount: "2,500,000 ج.س", rating: 4.8 },
@@ -203,6 +230,44 @@ export default function InvestorDashboard() {
                       </p>
                     </div>
                   )}
+                </div>
+
+                <div className="mt-4 rounded-xl border border-light-gray overflow-hidden">
+                  <div className="bg-light-gray/60 px-4 py-3 border-b border-light-gray">
+                    <p className="font-cairo text-sm font-bold text-text-dark">الدردشة مع مستشار المستثمر</p>
+                  </div>
+
+                  <div className="p-4 space-y-3 max-h-64 overflow-y-auto bg-white">
+                    {advisorChat.map((msg) => (
+                      <div key={msg.id} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
+                        <div
+                          className={`max-w-[85%] rounded-xl px-4 py-2.5 font-cairo text-sm leading-7 ${
+                            msg.role === "assistant"
+                              ? "bg-light-gray text-text-dark"
+                              : "bg-invest-blue text-white"
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-3 border-t border-light-gray bg-white flex gap-2">
+                    <button
+                      onClick={sendAdvisorMessage}
+                      className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm font-bold hover:bg-emerald-600 transition"
+                    >
+                      إرسال
+                    </button>
+                    <input
+                      value={advisorInput}
+                      onChange={(e) => setAdvisorInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && sendAdvisorMessage()}
+                      placeholder="اكتب سؤالك لمستشار المستثمر..."
+                      className="flex-1 border border-light-gray rounded-lg px-4 py-2 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                    />
+                  </div>
                 </div>
               </div>
             </>
