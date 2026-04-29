@@ -17,7 +17,7 @@ export function PlaceholderPage({ title, description }: PlaceholderProps) {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <span className="font-cairo font-bold text-xl text-invest-blue">
-              استثمرك
+              Nile Invest AI
             </span>
           </Link>
         </div>

@@ -16,7 +16,7 @@ export default function LoginPage() {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <span className="font-cairo font-bold text-lg text-invest-blue">
-              استثمرك
+              Nile Invest AI
             </span>
           </Link>
 

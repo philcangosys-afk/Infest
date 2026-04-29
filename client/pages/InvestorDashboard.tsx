@@ -53,7 +53,7 @@ export default function InvestorDashboard() {
           <div className="w-10 h-10 bg-invest-teal rounded-lg flex items-center justify-center">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
-          <span className="font-cairo font-bold text-lg">استثمرك</span>
+          <span className="font-cairo font-bold text-lg">Nile Invest AI</span>
         </Link>
 
         <nav className="space-y-3">

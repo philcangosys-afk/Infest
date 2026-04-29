@@ -98,12 +98,14 @@ export default function Index() {
       <header className="fixed top-0 right-0 left-0 z-50 bg-white/85 backdrop-blur-xl border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 bg-gradient-to-br from-invest-teal to-emerald-500 rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl transition">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2F7f0a4564e10744da98b8f1029aa8c5f2%2Fa3e69d6032c542e1bf773a404542304a?format=webp&width=800&height=1200"
+              alt="Nile Invest AI"
+              className="w-12 h-12 rounded-2xl object-cover shadow-md group-hover:shadow-xl transition"
+            />
             <div className="hidden sm:block">
-              <p className="font-cairo font-bold text-xl text-invest-blue leading-none">استثمرك</p>
-              <p className="font-cairo text-[11px] text-dark-gray">منصة الاستثمار السودانية</p>
+              <p className="font-cairo font-bold text-xl text-invest-blue leading-none">Nile Invest AI</p>
+              <p className="font-cairo text-[11px] text-dark-gray">المنصة السودانية للاستثمار الذكي</p>
             </div>
           </Link>
 
@@ -359,7 +361,7 @@ export default function Index() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="font-cairo text-xs font-bold text-invest-teal bg-invest-teal/10 px-3 py-1.5 rounded-full inline-block mb-4">
-              لماذا استثمرك
+              لماذا Nile Invest AI
             </span>
             <h2 className="font-cairo text-4xl sm:text-5xl font-bold text-invest-blue mb-4">
               كل ما تحتاجه في مكان واحد
@@ -525,7 +527,7 @@ export default function Index() {
                 هل أنت مستعد للبدء؟
               </h2>
               <p className="font-cairo text-white/90 text-lg leading-relaxed">
-                انضم لآلاف المستثمرين ورواد الأعمال على منصة استثمرك اليوم.
+                انضم لآلاف المستثمرين ورواد الأعمال على منصة Nile Invest AI اليوم.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
@@ -551,10 +553,12 @@ export default function Index() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-10 mb-10">
           <div>
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 bg-gradient-to-br from-invest-teal to-emerald-500 rounded-2xl flex items-center justify-center shadow">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-cairo font-bold text-xl text-invest-blue">استثمرك</span>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F7f0a4564e10744da98b8f1029aa8c5f2%2Fa3e69d6032c542e1bf773a404542304a?format=webp&width=800&height=1200"
+                alt="Nile Invest AI"
+                className="w-11 h-11 rounded-2xl object-cover shadow"
+              />
+              <span className="font-cairo font-bold text-xl text-invest-blue">Nile Invest AI</span>
             </Link>
             <p className="font-cairo text-sm text-dark-gray leading-relaxed">
               منصة استثمارية سودانية تربط رواد الأعمال بالمستثمرين في كل مكان.
@@ -580,7 +584,7 @@ export default function Index() {
           ))}
         </div>
         <div className="max-w-7xl mx-auto pt-6 border-t border-light-gray flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-cairo text-sm text-dark-gray">© 2024 استثمرك. جميع الحقوق محفوظة.</p>
+          <p className="font-cairo text-sm text-dark-gray">© 2024 Nile Invest AI. جميع الحقوق محفوظة.</p>
           <p className="font-cairo text-sm text-dark-gray">صنع بحب 💚 في السودان</p>
         </div>
       </footer>

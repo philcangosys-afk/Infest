@@ -79,7 +79,7 @@ export default function BrowseProjects() {
               <TrendingUp className="w-7 h-7 text-white" />
             </div>
             <span className="font-cairo font-bold text-2xl text-invest-blue hidden sm:inline group-hover:text-invest-teal transition">
-              استثمرك
+              Nile Invest AI
             </span>
           </Link>
 

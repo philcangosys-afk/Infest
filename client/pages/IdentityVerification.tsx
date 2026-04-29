@@ -20,7 +20,7 @@ export default function IdentityVerification() {
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="font-cairo font-bold text-xl leading-tight">استثمر</p>
+            <p className="font-cairo font-bold text-xl leading-tight">Nile Invest AI</p>
             <p className="font-cairo text-xs text-white/70">منصة استثمارية ذكية</p>
           </div>
         </Link>

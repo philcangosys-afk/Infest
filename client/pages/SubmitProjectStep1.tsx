@@ -17,7 +17,7 @@ export default function SubmitProjectStep1() {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <span className="font-cairo font-bold text-2xl text-invest-blue hidden sm:inline">
-              استثمرك
+              Nile Invest AI
             </span>
           </Link>
         </div>
