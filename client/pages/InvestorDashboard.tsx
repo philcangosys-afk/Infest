@@ -8,7 +8,7 @@ export default function InvestorDashboard() {
   const [activeSection, setActiveSection] = useState<InvestorSection>("dashboard");
 
   const suggestedProjects = [
-    { id: 1, name: "منصة التعليم الذكي", founder: "أحمد الطيب", amount: "2,500,000 ج.س", rating: 4.8 },
+    { id: 1, name: "منصة التعليم الذكي", founder: "زين خلف الله", amount: "2,500,000 ج.س", rating: 4.8 },
     { id: 2, name: "نمو الزراعة", founder: "سارة نور", amount: "1,800,000 ج.س", rating: 4.6 },
     { id: 3, name: "سلسلة الإمداد الذكية", founder: "خالد عثمان", amount: "3,500,000 ج.س", rating: 4.7 },
   ];
@@ -85,7 +85,7 @@ export default function InvestorDashboard() {
         <header className="bg-white border-b border-light-gray sticky top-0 z-20">
           <div className="px-8 h-20 flex items-center justify-between">
             <div>
-              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً، محمد 👋</h1>
+              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً، محمد الي زين 👋</h1>
               <p className="font-cairo text-sm text-dark-gray">{titles[activeSection]}</p>
             </div>
             <div className="flex items-center gap-4">
