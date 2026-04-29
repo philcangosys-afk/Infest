@@ -85,7 +85,7 @@ export default function InvestorDashboard() {
         <header className="bg-white border-b border-light-gray sticky top-0 z-20">
           <div className="px-8 h-20 flex items-center justify-between">
             <div>
-              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً، محمد الي زين 👋</h1>
+              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً، زين العابدين 👋</h1>
               <p className="font-cairo text-sm text-dark-gray">{titles[activeSection]}</p>
             </div>
             <div className="flex items-center gap-4">
