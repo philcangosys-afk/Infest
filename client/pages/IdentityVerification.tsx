@@ -1,187 +1,179 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, Upload, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  TrendingUp,
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  Shield,
+  Folder,
+  Camera,
+  IdCard,
+} from "lucide-react";
 
 export default function IdentityVerification() {
   return (
-    <div className="min-h-screen bg-light-gray" dir="rtl">
+    <div className="min-h-screen bg-[#f7f9fc]" dir="rtl">
       {/* Sidebar */}
-      <div className="fixed right-0 top-0 bottom-0 w-72 bg-gradient-to-b from-invest-blue to-invest-blue/95 text-white p-8 overflow-y-auto shadow-xl">
-        <Link to="/" className="flex items-center gap-3 mb-16">
-          <div className="w-12 h-12 bg-gradient-to-br from-invest-teal to-invest-teal/80 rounded-xl flex items-center justify-center shadow-lg">
-            <TrendingUp className="w-7 h-7 text-white" />
+      <aside className="fixed right-0 top-0 bottom-0 w-72 bg-gradient-to-b from-[#0d2f7a] to-[#08255f] text-white p-6 overflow-y-auto shadow-2xl">
+        <Link to="/" className="flex items-center gap-3 mb-12">
+          <div className="w-11 h-11 bg-gradient-to-br from-invest-teal to-[#00b897] rounded-xl flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-white" />
           </div>
-          <span className="font-cairo font-bold text-xl">استثمرك</span>
+          <div>
+            <p className="font-cairo font-bold text-xl leading-tight">استثمر</p>
+            <p className="font-cairo text-xs text-white/70">منصة استثمارية ذكية</p>
+          </div>
         </Link>
 
         <nav className="space-y-2">
           {[
-            { icon: "🏠", label: "لوحة التحكم", active: false },
-            { icon: "🔍", label: "التحقق من الهوية", active: true },
-            { icon: "📁", label: "مشاريعي", active: false },
-            { icon: "⚙️", label: "الإعدادات", active: false }
+            "لوحة التحكم",
+            "محفظتي",
+            "استثماري",
+            "تمويل الأعمال",
+            "التقارير",
+            "التحقق من الهوية",
+            "الإعدادات",
+            "المساعدة",
           ].map((item) => (
-            <a
-              key={item.label}
-              href="#"
-              className={`font-cairo flex items-center gap-4 px-6 py-4 rounded-xl font-bold transition-all duration-200 ${
-                item.active
-                  ? "bg-invest-teal text-invest-blue shadow-lg scale-105"
-                  : "text-white hover:bg-invest-blue/50"
+            <Link
+              key={item}
+              to={item === "لوحة التحكم" ? "/dashboard" : item === "التحقق من الهوية" ? "/identity-verification" : "/dashboard"}
+              className={`font-cairo flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                item === "التحقق من الهوية"
+                  ? "bg-invest-teal text-invest-blue shadow-lg"
+                  : "text-white/90 hover:bg-white/10"
               }`}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span>{item.label}</span>
-            </a>
+              <span className="w-2 h-2 rounded-full bg-current/80"></span>
+              {item}
+            </Link>
           ))}
         </nav>
-      </div>
+      </aside>
 
-      {/* Main Content */}
-      <div className="pr-72 min-h-screen">
-        {/* Header */}
-        <header className="bg-white border-b border-light-gray sticky top-0 z-40 shadow-sm">
-          <div className="px-12 h-24 flex items-center justify-between">
-            <div>
-              <h1 className="font-cairo font-bold text-4xl text-invest-blue mb-2">
-                التحقق من الهوية
-              </h1>
-              <p className="font-cairo text-dark-gray font-semibold">
-                يرجى رفع الوثائق المطلوبة للتحقق من هويتك
-              </p>
-            </div>
-            <div className="text-left">
-              <span className="font-cairo text-sm font-bold text-invest-green bg-invest-green/10 px-4 py-2 rounded-full">
-                ✓ الخطوة 2 من 3
-              </span>
-            </div>
+      {/* Main */}
+      <main className="pr-72 min-h-screen">
+        <header className="bg-white border-b border-light-gray sticky top-0 z-30">
+          <div className="px-10 py-6">
+            <h1 className="font-cairo text-5xl font-bold text-invest-blue mb-2">التحقق من الهوية</h1>
+            <p className="font-cairo text-dark-gray">نحن نلتزم بحماية بياناتك وضمان أمان حسابك</p>
           </div>
         </header>
 
-        {/* Content */}
-        <div className="p-12">
-          {/* Progress Alert */}
-          <div className="bg-gradient-to-r from-invest-teal/20 to-invest-teal/10 border-2 border-invest-teal rounded-2xl p-6 mb-12 shadow-lg">
-            <p className="font-cairo text-invest-teal flex items-center gap-3 text-lg font-semibold">
-              <CheckCircle className="w-7 h-7 flex-shrink-0" />
-              <span>تم استكمال جميع المعلومات بنجاح. يرجى رفع الوثائق المطلوبة</span>
-            </p>
-          </div>
-
-          {/* Document Upload Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {/* Card 1 - ID Card */}
-            <div className="bg-white rounded-2xl p-8 border-2 border-light-gray hover:border-invest-teal hover:shadow-xl transition-all duration-300 group">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-3xl">📋</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-cairo font-bold text-xl text-text-dark">صورة الهوية</h3>
-                  <p className="font-cairo text-sm text-dark-gray font-semibold">صورة واضحة من الأمام</p>
-                </div>
+        <div className="p-10 space-y-6">
+          {/* Sudanese sample person */}
+          <section className="bg-white rounded-2xl border border-light-gray p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <p className="font-cairo text-sm text-dark-gray">مثال بيانات المستخدم</p>
+                <p className="font-cairo text-xl font-bold text-text-dark">محمد الطيب أحمد</p>
+                <p className="font-cairo text-sm text-dark-gray">الخرطوم - السودان • الرقم الوطني: 2987XXXXXX</p>
               </div>
+              <span className="font-cairo text-xs bg-invest-green/10 text-invest-green px-3 py-1 rounded-full font-bold">
+                حساب سوداني تجريبي
+              </span>
+            </div>
+          </section>
 
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-light-gray rounded-lg p-6 text-center mb-4 hover:border-invest-teal transition cursor-pointer">
-                <Upload className="w-8 h-8 text-dark-gray mx-auto mb-2" />
-                <p className="font-cairo text-sm text-dark-gray">
-                  اسحب الملف هنا أو انقر للاختيار
-                </p>
-                <p className="font-cairo text-xs text-dark-gray mt-2">
-                  PDF, JPG, PNG • حتى 10MB
-                </p>
+          {/* Step tracker */}
+          <section className="bg-white rounded-2xl border border-light-gray p-6 shadow-sm">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="w-8 h-8 mx-auto rounded-full bg-invest-green text-white flex items-center justify-center font-cairo font-bold">✓</div>
+                <p className="font-cairo text-sm font-bold text-invest-green mt-2">مكتمل</p>
+                <p className="font-cairo text-xs text-dark-gray">تم التحقق</p>
               </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-invest-green" />
-                <span className="font-cairo text-sm text-invest-green font-semibold">جاري</span>
-                <span className="font-cairo text-xs text-dark-gray">15-10-2024</span>
+              <div>
+                <div className="w-8 h-8 mx-auto rounded-full bg-invest-teal text-white flex items-center justify-center font-cairo font-bold">2</div>
+                <p className="font-cairo text-sm font-bold text-invest-teal mt-2">جاري</p>
+                <p className="font-cairo text-xs text-dark-gray">قيد التدقيق</p>
+              </div>
+              <div>
+                <div className="w-8 h-8 mx-auto rounded-full bg-invest-orange text-white flex items-center justify-center font-cairo font-bold">3</div>
+                <p className="font-cairo text-sm font-bold text-invest-orange mt-2">معلق</p>
+                <p className="font-cairo text-xs text-dark-gray">بانتظار المراجعة</p>
               </div>
             </div>
+          </section>
 
-            {/* Card 2 - Selfie */}
-            <div className="bg-white rounded-xl p-6 border-2 border-light-gray">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-invest-teal/10 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">📸</span>
+          {/* upload cards */}
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {[{
+              title: "صورة الهوية",
+              subtitle: "صورة واضحة للهوية من الأمام",
+              icon: <IdCard className="w-6 h-6 text-invest-teal" />,
+              status: "مكتمل",
+              statusColor: "text-invest-green",
+              statusIcon: <CheckCircle className="w-4 h-4 text-invest-green" />,
+            }, {
+              title: "صورة شخصية",
+              subtitle: "صورة شخصية واضحة لوجهك",
+              icon: <Camera className="w-6 h-6 text-invest-teal" />,
+              status: "جاري",
+              statusColor: "text-invest-teal",
+              statusIcon: <CheckCircle className="w-4 h-4 text-invest-teal" />,
+            }, {
+              title: "وثائق إضافية",
+              subtitle: "أي مستندات داعمة إضافية",
+              icon: <Folder className="w-6 h-6 text-invest-orange" />,
+              status: "معلق",
+              statusColor: "text-invest-orange",
+              statusIcon: <AlertCircle className="w-4 h-4 text-invest-orange" />,
+            }].map((card) => (
+              <article key={card.title} className="bg-white rounded-2xl border border-light-gray p-5 shadow-sm hover:shadow-md transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-xl bg-light-gray flex items-center justify-center">{card.icon}</div>
+                  <div>
+                    <h3 className="font-cairo font-bold text-lg text-text-dark">{card.title}</h3>
+                    <p className="font-cairo text-xs text-dark-gray">{card.subtitle}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-cairo font-bold text-text-dark">صورة شخصية (Selfie)</h3>
-                  <p className="font-cairo text-sm text-dark-gray">صورة واضحة لوجهك</p>
+
+                <div className="border-2 border-dashed border-light-gray rounded-xl p-6 text-center mb-4 hover:border-invest-teal transition cursor-pointer">
+                  <Upload className="w-7 h-7 text-dark-gray mx-auto mb-2" />
+                  <p className="font-cairo text-sm text-dark-gray">Upload file or drag here</p>
+                  <p className="font-cairo text-xs text-dark-gray mt-1">PDF, JPG, PNG • 10MB</p>
                 </div>
-              </div>
 
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-light-gray rounded-lg p-6 text-center mb-4 hover:border-invest-teal transition cursor-pointer">
-                <Upload className="w-8 h-8 text-dark-gray mx-auto mb-2" />
-                <p className="font-cairo text-sm text-dark-gray">
-                  اسحب الملف هنا أو انقر للاختيار
-                </p>
-                <p className="font-cairo text-xs text-dark-gray mt-2">
-                  PDF, JPG, PNG • حتى 10MB
-                </p>
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-invest-green" />
-                <span className="font-cairo text-sm text-invest-green font-semibold">مكتمل</span>
-                <span className="font-cairo text-xs text-dark-gray">15-10-2024</span>
-              </div>
-            </div>
-
-            {/* Card 3 - Additional Docs */}
-            <div className="bg-white rounded-xl p-6 border-2 border-light-gray">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-invest-orange/10 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">📄</span>
+                <div className="flex items-center justify-between">
+                  <span className={`font-cairo text-sm font-bold ${card.statusColor} flex items-center gap-1`}>
+                    {card.statusIcon}
+                    {card.status}
+                  </span>
+                  <span className="font-cairo text-xs text-dark-gray">10:30 ص • 15 يونيو</span>
                 </div>
-                <div>
-                  <h3 className="font-cairo font-bold text-text-dark">وثائق إضافية</h3>
-                  <p className="font-cairo text-sm text-dark-gray">شهادات أو وثائق ذات صلة</p>
-                </div>
-              </div>
+              </article>
+            ))}
+          </section>
 
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-light-gray rounded-lg p-6 text-center mb-4 hover:border-invest-teal transition cursor-pointer">
-                <Upload className="w-8 h-8 text-dark-gray mx-auto mb-2" />
-                <p className="font-cairo text-sm text-dark-gray">
-                  اسحب الملف هنا أو انقر للاختيار
-                </p>
-                <p className="font-cairo text-xs text-dark-gray mt-2">
-                  PDF, JPG, PNG • حتى 10MB
-                </p>
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-invest-orange" />
-                <span className="font-cairo text-sm text-invest-orange font-semibold">معلق</span>
-                <span className="font-cairo text-xs text-dark-gray">قيد المراجعة</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Security Notice */}
-          <div className="bg-light-gray rounded-xl p-6 mb-8">
+          <section className="bg-[#edf9f7] border border-[#c9efe7] rounded-2xl p-4">
             <p className="font-cairo text-sm text-dark-gray text-center">
-              <span className="text-green-600 font-semibold">🔒</span> جميع بيانات
-              تم تشفيرها بنسبة 100% وكن آمنة تماماً على أيدينا
+              <Shield className="w-4 h-4 inline ml-1 text-invest-teal" />
+              حماية بياناتك: جميع البيانات مشفرة بالكامل ولا يتم مشاركتها مع أي طرف ثالث
             </p>
-          </div>
+          </section>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <button className="flex-1 py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 inline-flex items-center justify-center gap-2 shadow-lg hover:scale-105">
-              <span>✓ إرسال للتحقق</span>
+          {/* actions incl. skip */}
+          <section className="flex flex-wrap gap-3">
+            <button className="flex-1 min-w-[220px] py-3.5 bg-invest-blue text-white rounded-xl font-cairo font-bold hover:bg-blue-900 transition">
+              إرسال للتحقق
             </button>
-            <button className="px-8 py-4 border-2 border-invest-teal text-invest-teal rounded-xl font-cairo font-bold text-lg hover:bg-light-gray transition-all duration-200">
-              ✕ إلغاء
-            </button>
-          </div>
+            <Link
+              to="/dashboard"
+              className="py-3.5 px-8 border-2 border-light-gray rounded-xl font-cairo font-bold text-text-dark hover:bg-light-gray transition"
+            >
+              إلغاء
+            </Link>
+            <Link
+              to="/browse-projects"
+              className="py-3.5 px-8 border-2 border-invest-teal text-invest-teal rounded-xl font-cairo font-bold hover:bg-invest-teal/10 transition"
+            >
+              تخطي التحقق حالياً
+            </Link>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
