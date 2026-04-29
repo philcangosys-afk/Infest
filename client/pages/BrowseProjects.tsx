@@ -106,9 +106,12 @@ export default function BrowseProjects() {
             </button>
 
             {/* Profile */}
-            <button className="w-11 h-11 bg-gradient-to-br from-invest-blue to-invest-teal rounded-xl flex items-center justify-center text-white font-cairo font-bold text-lg hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <Link
+              to="/investor-dashboard"
+              className="w-11 h-11 bg-gradient-to-br from-invest-blue to-invest-teal rounded-xl flex items-center justify-center text-white font-cairo font-bold text-lg hover:shadow-lg transition-all duration-200 hover:scale-105"
+            >
               أ
-            </button>
+            </Link>
           </div>
         </div>
       </header>

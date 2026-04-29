@@ -11,6 +11,7 @@ import BrowseProjects from "./pages/BrowseProjects";
 import IdentityVerification from "./pages/IdentityVerification";
 import SubmitProject from "./pages/SubmitProject";
 import Dashboard from "./pages/Dashboard";
+import InvestorDashboard from "./pages/InvestorDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ export const App = () => (
           <Route path="/identity-verification" element={<IdentityVerification />} />
           <Route path="/submit-project" element={<SubmitProject />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/investor-dashboard" element={<InvestorDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
