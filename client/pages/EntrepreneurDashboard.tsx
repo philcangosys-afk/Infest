@@ -18,7 +18,7 @@ import {
   Wand2,
   Award,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type SectionKey =
   | "dashboard"
@@ -28,6 +28,62 @@ type SectionKey =
   | "profile"
   | "settings"
   | "investors";
+
+type EntrepreneurProject = {
+  id: number;
+  name: string;
+  status: string;
+  statusColor: string;
+  requests: number;
+  date: string;
+  image: string;
+  sector: string;
+  budget: string;
+  description: string;
+  duration: string;
+};
+
+const INITIAL_ENTREPRENEUR_PROJECTS: EntrepreneurProject[] = [
+  {
+    id: 1,
+    name: "تطبيق التعليم الذكي",
+    status: "نشط",
+    statusColor: "bg-invest-green",
+    requests: 3,
+    date: "2024/06/15",
+    image: "bg-gradient-to-br from-blue-400 to-blue-600",
+    sector: "التعليم",
+    budget: "2,500,000",
+    description: "منصة تعليمية تفاعلية مدعومة بالذكاء الاصطناعي للطلاب.",
+    duration: "12 شهر",
+  },
+  {
+    id: 2,
+    name: "منصة الزراعة الذكية",
+    status: "معلق",
+    statusColor: "bg-invest-orange",
+    requests: 2,
+    date: "2024/05/10",
+    image: "bg-gradient-to-br from-green-400 to-green-600",
+    sector: "الزراعة",
+    budget: "1,800,000",
+    description: "حل رقمي لمتابعة المزارع والإنتاجية وسلاسل التوريد.",
+    duration: "10 شهر",
+  },
+  {
+    id: 3,
+    name: "حلول الصحة الرقمية",
+    status: "مراجعة",
+    statusColor: "bg-invest-blue",
+    requests: 5,
+    date: "2024/04/20",
+    image: "bg-gradient-to-br from-red-400 to-red-600",
+    sector: "الصحة",
+    budget: "3,500,000",
+    description: "خدمات متابعة طبية رقمية مع إدارة ملفات المرضى.",
+    duration: "14 شهر",
+  },
+];
 
 export default function EntrepreneurDashboard() {
   const [activeSection, setActiveSection] = useState<SectionKey>("dashboard");
@@ -50,6 +106,50 @@ export default function EntrepreneurDashboard() {
       text: "مرحبًا، أنا مستشارك الذكي. اكتب سؤالك عن التمويل أو العرض التقديمي وسأساعدك مباشرة.",
     },
   ]);
+  const [projects, setProjects] = useState<EntrepreneurProject[]>(INITIAL_ENTREPRENEUR_PROJECTS);
+  const [projectForm, setProjectForm] = useState({
+    name: "",
+    sector: "",
+    budget: "",
+    duration: "",
+    description: "",
+  });
+
+  useEffect(() => {
+    const storedProjects = localStorage.getItem("nile_invest_custom_projects");
+    if (!storedProjects) return;
+
+    const parsedProjects = JSON.parse(storedProjects) as EntrepreneurProject[];
+    setProjects([...parsedProjects, ...INITIAL_ENTREPRENEUR_PROJECTS]);
+  }, []);
+
+  const handleAddProject = () => {
+    if (!projectForm.name || !projectForm.sector || !projectForm.budget || !projectForm.description) return;
+
+    const newProject: EntrepreneurProject = {
+      id: Date.now(),
+      name: projectForm.name,
+      status: "قيد المراجعة",
+      statusColor: "bg-invest-blue",
+      requests: 0,
+      date: new Date().toISOString().slice(0, 10).replace(/-/g, "/"),
+      image: "bg-gradient-to-br from-indigo-400 to-indigo-600",
+      sector: projectForm.sector,
+      budget: projectForm.budget,
+      description: projectForm.description,
+      duration: projectForm.duration || "غير محدد",
+    };
+
+    const updatedProjects = [newProject, ...projects];
+    setProjects(updatedProjects);
+    setSelectedAdvisorProject(newProject.name);
+    setProjectForm({ name: "", sector: "", budget: "", duration: "", description: "" });
+
+    localStorage.setItem(
+      "nile_invest_custom_projects",
+      JSON.stringify(updatedProjects.filter((project) => project.id > 1000)),
+    );
+  };
 
   const sendAdvisorMessage = () => {
     const message = advisorInput.trim();
@@ -70,35 +170,6 @@ export default function EntrepreneurDashboard() {
     setAdvisorInput("");
   };
 
-  const projects = [
-    {
-      id: 1,
-      name: "تطبيق التعليم الذكي",
-      status: "نشط",
-      statusColor: "bg-invest-green",
-      requests: 3,
-      date: "2024/06/15",
-      image: "bg-gradient-to-br from-blue-400 to-blue-600",
-    },
-    {
-      id: 2,
-      name: "منصة الزراعة الذكية",
-      status: "معلق",
-      statusColor: "bg-invest-orange",
-      requests: 2,
-      date: "2024/05/10",
-      image: "bg-gradient-to-br from-green-400 to-green-600",
-    },
-    {
-      id: 3,
-      name: "حلول الصحة الرقمية",
-      status: "مراجعة",
-      statusColor: "bg-invest-blue",
-      requests: 5,
-      date: "2024/04/20",
-      image: "bg-gradient-to-br from-red-400 to-red-600",
-    },
-  ];
 
   const requests = [
     {
@@ -388,16 +459,65 @@ export default function EntrepreneurDashboard() {
 
           {/* Projects */}
           {activeSection === "projects" && (
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h2 className="font-cairo font-bold text-2xl mb-6">قائمة المشاريع</h2>
+            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
+              <h2 className="font-cairo font-bold text-2xl">إضافة مشروع جديد</h2>
+
+              <div className="border border-light-gray rounded-2xl p-5 bg-light-gray/40 space-y-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <input
+                    value={projectForm.name}
+                    onChange={(e) => setProjectForm((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="اسم المشروع"
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    value={projectForm.sector}
+                    onChange={(e) => setProjectForm((prev) => ({ ...prev, sector: e.target.value }))}
+                    placeholder="المجال"
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    value={projectForm.budget}
+                    onChange={(e) => setProjectForm((prev) => ({ ...prev, budget: e.target.value }))}
+                    placeholder="الميزانية المطلوبة (ج.س)"
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <input
+                    value={projectForm.duration}
+                    onChange={(e) => setProjectForm((prev) => ({ ...prev, duration: e.target.value }))}
+                    placeholder="مدة تنفيذ المشروع"
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    value={projectForm.description}
+                    onChange={(e) => setProjectForm((prev) => ({ ...prev, description: e.target.value }))}
+                    placeholder="الوصف التفصيلي للمشروع"
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                </div>
+                <button
+                  onClick={handleAddProject}
+                  className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition"
+                >
+                  إضافة المشروع
+                </button>
+              </div>
+
+              <h3 className="font-cairo font-bold text-xl">قائمة المشاريع</h3>
               <div className="space-y-4">
                 {projects.map((project) => (
-                  <div key={project.id} className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div key={project.id} className="p-4 border border-light-gray rounded-xl flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-lg ${project.image}`}></div>
                       <div>
                         <p className="font-cairo font-semibold">{project.name}</p>
                         <p className="font-cairo text-xs text-dark-gray">{project.date}</p>
+                        <p className="font-cairo text-xs text-dark-gray mt-1">المجال: {project.sector}</p>
+                        <p className="font-cairo text-xs text-dark-gray">الميزانية المطلوبة: {project.budget} ج.س</p>
+                        <p className="font-cairo text-xs text-dark-gray">المدة: {project.duration}</p>
+                        <p className="font-cairo text-xs text-dark-gray mt-1 max-w-xl">{project.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

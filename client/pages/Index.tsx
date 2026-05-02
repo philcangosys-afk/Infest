@@ -19,7 +19,19 @@ import { useEffect, useMemo, useState } from "react";
 
 type Audience = "investor" | "entrepreneur";
 
-const projectShowcase = [
+type ShowcaseProject = {
+  id: number;
+  title: string;
+  sector: string;
+  founder: string;
+  progress: number;
+  raised: string;
+  target: string;
+  accent: string;
+  icon: string;
+};
+
+const DEFAULT_PROJECT_SHOWCASE: ShowcaseProject[] = [
   {
     id: 1,
     title: "منصة التعليم الذكي",
@@ -58,14 +70,56 @@ const projectShowcase = [
 export default function Index() {
   const [audience, setAudience] = useState<Audience>("investor");
   const [activeProject, setActiveProject] = useState(0);
+  const [projectShowcase, setProjectShowcase] = useState<ShowcaseProject[]>(DEFAULT_PROJECT_SHOWCASE);
+
+  useEffect(() => {
+    const storedProjects = localStorage.getItem("nile_invest_custom_projects");
+    if (!storedProjects) return;
+
+    try {
+      const parsedProjects = JSON.parse(storedProjects) as {
+        id: number;
+        name: string;
+        sector: string;
+        budget: string;
+      }[];
+
+      if (!parsedProjects.length) return;
+
+      const accents = ["from-blue-500 to-indigo-500", "from-emerald-500 to-teal-500", "from-amber-500 to-orange-500"];
+      const icons = ["🚀", "💡", "📊"];
+
+      const customShowcase: ShowcaseProject[] = parsedProjects.map((project, index) => ({
+        id: project.id,
+        title: project.name,
+        sector: project.sector,
+        founder: "زين خلف الله",
+        progress: 15,
+        raised: "0",
+        target: project.budget,
+        accent: accents[index % accents.length],
+        icon: icons[index % icons.length],
+      }));
+
+      setProjectShowcase([...customShowcase, ...DEFAULT_PROJECT_SHOWCASE]);
+    } catch {
+      setProjectShowcase(DEFAULT_PROJECT_SHOWCASE);
+    }
+  }, []);
 
   // Auto-rotate showcase
   useEffect(() => {
+    if (!projectShowcase.length) return;
+
     const id = setInterval(() => {
       setActiveProject((prev) => (prev + 1) % projectShowcase.length);
     }, 4000);
     return () => clearInterval(id);
-  }, []);
+  }, [projectShowcase.length]);
+
+  useEffect(() => {
+    if (activeProject >= projectShowcase.length) setActiveProject(0);
+  }, [activeProject, projectShowcase.length]);
 
   const heroCopy = useMemo(() => {
     if (audience === "investor") {
@@ -90,7 +144,7 @@ export default function Index() {
     } as const;
   }, [audience]);
 
-  const project = projectShowcase[activeProject];
+  const project = projectShowcase[activeProject] ?? DEFAULT_PROJECT_SHOWCASE[0];
 
   return (
     <div className="w-full min-h-screen bg-white" dir="rtl">
