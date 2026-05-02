@@ -8,6 +8,7 @@ export default function InvestorDashboard() {
   const [activeSection, setActiveSection] = useState<InvestorSection>("dashboard");
   const [advisorTask, setAdvisorTask] = useState<"feasibility" | "compare" | "returns">("feasibility");
   const [advisorInput, setAdvisorInput] = useState("");
+  const [selectedAdvisorProject, setSelectedAdvisorProject] = useState("منصة التعليم الذكي");
   const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
     {
       id: 1,
@@ -22,10 +23,10 @@ export default function InvestorDashboard() {
 
     const modeReply =
       advisorTask === "feasibility"
-        ? "تحليل الجدوى: ابدأ بمراجعة التدفق النقدي المتوقع، نسبة الإشغال/المبيعات، ومخاطر السوق قبل اتخاذ القرار."
+        ? `تحليل الجدوى لمشروع ${selectedAdvisorProject}: ابدأ بمراجعة التدفق النقدي المتوقع، نسبة الإشغال/المبيعات، ومخاطر السوق قبل اتخاذ القرار.`
         : advisorTask === "compare"
-          ? "المقارنة: قارن بين معدل النمو، فترة الاسترداد، وخبرة الفريق التشغيلي لتحديد الخيار الأكثر توازنًا."
-          : "تقدير العائد: أدخل مبلغ الاستثمار والعائد السنوي المتوقع لأحسب لك صافي العائد بصورة مبسطة.";
+          ? `المقارنة لمشروع ${selectedAdvisorProject}: قارن بين معدل النمو، فترة الاسترداد، وخبرة الفريق التشغيلي لتحديد الخيار الأكثر توازنًا.`
+          : `تقدير العائد لمشروع ${selectedAdvisorProject}: أدخل مبلغ الاستثمار والعائد السنوي المتوقع لأحسب لك صافي العائد بصورة مبسطة.`;
 
     setAdvisorChat((prev) => [
       ...prev,
@@ -177,6 +178,21 @@ export default function InvestorDashboard() {
                   </span>
                 </div>
 
+                <div className="mb-4">
+                  <label className="font-cairo text-xs text-dark-gray mb-2 block">اختر المشروع الذي تريد مناقشته مع المستشار</label>
+                  <select
+                    value={selectedAdvisorProject}
+                    onChange={(e) => setSelectedAdvisorProject(e.target.value)}
+                    className="w-full md:w-80 border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white"
+                  >
+                    {suggestedProjects.map((project) => (
+                      <option key={project.id} value={project.name}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid md:grid-cols-3 gap-2 mb-4">
                   {[
                     { key: "feasibility", label: "تحليل الجدوى" },
@@ -200,7 +216,7 @@ export default function InvestorDashboard() {
                 <div className="space-y-3">
                   <div className="p-4 rounded-xl bg-light-gray/50 border border-light-gray max-w-2xl">
                     <p className="font-cairo text-sm text-dark-gray">
-                      أرغب في تقييم مشروع عقاري في الخرطوم، هل يمكنك تحليل الجدوى الاستثمارية؟
+                      {`أرغب في تقييم مشروع ${selectedAdvisorProject}، هل يمكنك تحليل الجدوى الاستثمارية؟`}
                     </p>
                   </div>
 

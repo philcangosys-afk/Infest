@@ -33,6 +33,7 @@ export default function EntrepreneurDashboard() {
   const [activeSection, setActiveSection] = useState<SectionKey>("dashboard");
   const [advisorMode, setAdvisorMode] = useState<"pitch" | "financial" | "requests">("pitch");
   const [advisorInput, setAdvisorInput] = useState("");
+  const [selectedAdvisorProject, setSelectedAdvisorProject] = useState("تطبيق التعليم الذكي");
   const [personalFiles, setPersonalFiles] = useState({
     nationalId: false,
     personalPhoto: false,
@@ -56,10 +57,10 @@ export default function EntrepreneurDashboard() {
 
     const modeReply =
       advisorMode === "pitch"
-        ? "اقتراحي: ابدأ شرحك بالمشكلة ثم الحل ثم الأرقام الأساسية (حجم السوق، عدد العملاء، والإيراد الشهري)."
+        ? `اقتراحي لمشروع ${selectedAdvisorProject}: ابدأ شرحك بالمشكلة ثم الحل ثم الأرقام الأساسية (حجم السوق، عدد العملاء، والإيراد الشهري).`
         : advisorMode === "financial"
-          ? "اقتراحي المالي: قسّم المبلغ على تطوير المنتج، التسويق، والتشغيل مع هدف واضح لكل بند."
-          : "اقتراحي للرد: استخدم رد مختصر يوضح الوضع الحالي والخطوة التالية وموعد اجتماع مقترح.";
+          ? `اقتراحي المالي لمشروع ${selectedAdvisorProject}: قسّم المبلغ على تطوير المنتج، التسويق، والتشغيل مع هدف واضح لكل بند.`
+          : `اقتراحي للرد بخصوص مشروع ${selectedAdvisorProject}: استخدم رد مختصر يوضح الوضع الحالي والخطوة التالية وموعد اجتماع مقترح.`;
 
     setAdvisorChat((prev) => [
       ...prev,
@@ -276,6 +277,21 @@ export default function EntrepreneurDashboard() {
                     <Wand2 className="w-3.5 h-3.5" />
                     AI Advisor
                   </span>
+                </div>
+
+                <div className="mb-4">
+                  <label className="font-cairo text-xs text-dark-gray mb-2 block">اختر المشروع للمناقشة أو المراجعة</label>
+                  <select
+                    value={selectedAdvisorProject}
+                    onChange={(e) => setSelectedAdvisorProject(e.target.value)}
+                    className="w-full md:w-80 border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white"
+                  >
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.name}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-2 mb-4">
