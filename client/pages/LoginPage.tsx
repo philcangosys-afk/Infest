@@ -1,9 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role") === "entrepreneur" ? "entrepreneur" : "investor";
+
+  const demoCredentials =
+    role === "entrepreneur"
+      ? {
+          email: "zain.founder@nileinvest.ai",
+          password: "Founder@123",
+          redirectTo: "/dashboard",
+        }
+      : {
+          email: "zain.investor@nileinvest.ai",
+          password: "Investor@123",
+          redirectTo: "/investor-dashboard",
+        };
+
+  const [email, setEmail] = useState(demoCredentials.email);
+  const [password, setPassword] = useState(demoCredentials.password);
 
   return (
     <div className="min-h-screen bg-white" dir="rtl">
@@ -25,9 +44,14 @@ export default function LoginPage() {
             <h1 className="font-cairo text-4xl sm:text-5xl font-bold text-invest-blue mb-3">
               تسجيل الدخول
             </h1>
-            <p className="font-cairo text-lg text-dark-gray mb-8">
+            <p className="font-cairo text-lg text-dark-gray mb-3">
               أدخل بيانات حسابك للمتابعة
             </p>
+            <div className="mb-8 p-4 bg-light-gray border border-light-gray rounded-xl">
+              <p className="font-cairo text-xs text-dark-gray mb-1">بيانات تجريبية جاهزة للدخول:</p>
+              <p className="font-cairo text-sm font-semibold text-text-dark">{demoCredentials.email}</p>
+              <p className="font-cairo text-sm font-semibold text-text-dark">{demoCredentials.password}</p>
+            </div>
 
             {/* Email Field */}
             <div className="mb-8">
@@ -36,6 +60,8 @@ export default function LoginPage() {
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@email.com"
                 className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
               />
@@ -49,6 +75,8 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="أدخل كلمة المرور"
                   className="w-full px-6 py-4 pr-14 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
                 />
@@ -73,7 +101,10 @@ export default function LoginPage() {
             </div>
 
             {/* Login Button */}
-            <button className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mb-8 shadow-lg hover:scale-105">
+            <button
+              onClick={() => navigate(demoCredentials.redirectTo)}
+              className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mb-8 shadow-lg hover:scale-105"
+            >
               دخول
             </button>
 
@@ -99,7 +130,7 @@ export default function LoginPage() {
             {/* Sign Up Link */}
             <p className="font-cairo text-center text-dark-gray text-lg">
               ليس لديك حساب؟{" "}
-              <Link to="/signup" className="text-invest-teal font-bold hover:underline">
+              <Link to={`/signup?role=${role}`} className="text-invest-teal font-bold hover:underline">
                 تسجيل جديد
               </Link>
             </p>

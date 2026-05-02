@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff, Check } from "lucide-react";
 import { useState } from "react";
 
@@ -6,7 +6,30 @@ export default function SignUpStep1() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role") === "entrepreneur" ? "entrepreneur" : "investor";
+
+  const demoData =
+    role === "entrepreneur"
+      ? {
+          fullName: "زين خلف الله",
+          email: "zain.founder@nileinvest.ai",
+          password: "Founder@123",
+          redirectTo: "/dashboard",
+        }
+      : {
+          fullName: "زين العابدين",
+          email: "zain.investor@nileinvest.ai",
+          password: "Investor@123",
+          redirectTo: "/investor-dashboard",
+        };
+
+  const [fullName, setFullName] = useState(demoData.fullName);
+  const [email, setEmail] = useState(demoData.email);
+  const [password, setPassword] = useState(demoData.password);
+  const [confirmPassword, setConfirmPassword] = useState(demoData.password);
+  const [agreeTerms, setAgreeTerms] = useState(true);
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
@@ -66,6 +89,13 @@ export default function SignUpStep1() {
             </div>
           </div>
 
+          <div className="mb-8 p-4 bg-light-gray border border-light-gray rounded-xl">
+            <p className="font-cairo text-xs text-dark-gray mb-1">بيانات تجريبية جاهزة للتسجيل:</p>
+            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.fullName}</p>
+            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.email}</p>
+            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.password}</p>
+          </div>
+
           {/* Form Content */}
           <div className="space-y-8">
             {/* Full Name Field */}
@@ -75,6 +105,8 @@ export default function SignUpStep1() {
               </label>
               <input
                 type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 placeholder="أدخل اسمك الكامل"
                 className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
               />
@@ -87,6 +119,8 @@ export default function SignUpStep1() {
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@email.com"
                 className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
               />
@@ -141,6 +175,8 @@ export default function SignUpStep1() {
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="أعد إدخال كلمة المرور"
                   className="w-full px-6 py-4 pr-14 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
                 />
@@ -162,6 +198,8 @@ export default function SignUpStep1() {
               <input
                 type="checkbox"
                 id="terms"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="w-6 h-6 mt-0.5 rounded border-2 border-invest-teal text-invest-teal cursor-pointer accent-invest-teal"
               />
               <label htmlFor="terms" className="font-cairo text-sm text-dark-gray cursor-pointer flex-1 font-semibold">
@@ -173,14 +211,17 @@ export default function SignUpStep1() {
             </div>
 
             {/* Next Button */}
-            <button className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105">
-              التالي →
+            <button
+              onClick={() => navigate(demoData.redirectTo)}
+              className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105"
+            >
+              تسجيل
             </button>
 
             {/* Login Link */}
             <p className="font-cairo text-center text-dark-gray text-lg">
               هل لديك حساب؟{" "}
-              <Link to="/login" className="text-invest-teal font-bold hover:underline">
+              <Link to={`/login?role=${role}`} className="text-invest-teal font-bold hover:underline">
                 تسجيل دخول
               </Link>
             </p>

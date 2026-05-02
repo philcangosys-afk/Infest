@@ -75,7 +75,7 @@ export default function Index() {
         highlight: "موثوقة وذكية",
         subtitle:
           "تصفح مشاريع سودانية واعدة، حلل بياناتها بمساعدة الذكاء الاصطناعي، واستثمر بكل ثقة من مكان واحد.",
-        primaryCta: { label: "ابدأ كمستثمر", to: "/investor-dashboard" },
+        primaryCta: { label: "ابدأ كمستثمر", to: "/login?role=investor" },
         secondaryCta: { label: "تصفح المشاريع", to: "/browse-projects" },
       } as const;
     }
@@ -85,7 +85,7 @@ export default function Index() {
       highlight: "مشروع ممول وناجح",
       subtitle:
         "قدم مشروعك بأبسط طريقة، وتواصل مع مستثمرين معتمدين، واحصل على تمويل بالعملة السودانية بسهولة.",
-      primaryCta: { label: "ابدأ كرائد أعمال", to: "/dashboard" },
+      primaryCta: { label: "ابدأ كرائد أعمال", to: "/login?role=entrepreneur" },
       secondaryCta: { label: "كيف نعمل؟", to: "#how" },
     } as const;
   }, [audience]);
