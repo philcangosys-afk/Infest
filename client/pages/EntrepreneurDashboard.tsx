@@ -477,15 +477,50 @@ export default function EntrepreneurDashboard() {
 
           {/* Settings */}
           {activeSection === "settings" && (
-            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-4">
+            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
               <h2 className="font-cairo font-bold text-2xl">الإعدادات</h2>
-              <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                <p className="font-cairo">تفعيل إشعارات المشاريع الجديدة</p>
-                <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+
+              <div className="space-y-3">
+                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
+                  <p className="font-cairo">تفعيل إشعارات المشاريع الجديدة</p>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </div>
+                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
+                  <p className="font-cairo">إظهار الملف للمستثمرين</p>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </div>
+                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
+                  <p className="font-cairo">استقبال طلبات الاستثمار تلقائياً</p>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </div>
+                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
+                  <p className="font-cairo">إرسال تقارير الأداء الأسبوعية</p>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </div>
               </div>
-              <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                <p className="font-cairo">إظهار الملف للمستثمرين</p>
-                <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+
+              <div className="border border-light-gray rounded-xl p-4 space-y-4">
+                <h3 className="font-cairo font-bold text-text-dark">تغيير كلمة المرور</h3>
+                <div className="grid md:grid-cols-3 gap-3">
+                  <input
+                    type="password"
+                    placeholder="كلمة المرور الحالية"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    type="password"
+                    placeholder="كلمة المرور الجديدة"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    type="password"
+                    placeholder="تأكيد كلمة المرور"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                </div>
+                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
+                  تحديث كلمة المرور
+                </button>
               </div>
             </div>
           )}

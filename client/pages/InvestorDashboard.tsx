@@ -387,11 +387,12 @@ export default function InvestorDashboard() {
           )}
 
           {activeSection === "settings" && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bg-white rounded-2xl p-6 shadow-lg space-y-6">
+              <div className="flex items-center gap-2">
                 <Settings className="w-5 h-5 text-invest-teal" />
                 <h2 className="font-cairo font-bold text-xl">الإعدادات</h2>
               </div>
+
               <div className="space-y-3">
                 <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
                   <span className="font-cairo">إشعارات فرص جديدة</span>
@@ -401,6 +402,38 @@ export default function InvestorDashboard() {
                   <span className="font-cairo">عرض الملف العام</span>
                   <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
                 </label>
+                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                  <span className="font-cairo">تفعيل تنبيهات انخفاض المخاطر</span>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </label>
+                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                  <span className="font-cairo">استقبال التقارير الأسبوعية تلقائياً</span>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </label>
+              </div>
+
+              <div className="border border-light-gray rounded-xl p-4 space-y-4">
+                <h3 className="font-cairo font-bold text-text-dark">تغيير كلمة المرور</h3>
+                <div className="grid md:grid-cols-3 gap-3">
+                  <input
+                    type="password"
+                    placeholder="كلمة المرور الحالية"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    type="password"
+                    placeholder="كلمة المرور الجديدة"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                  <input
+                    type="password"
+                    placeholder="تأكيد كلمة المرور"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                  />
+                </div>
+                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
+                  تحديث كلمة المرور
+                </button>
               </div>
             </div>
           )}
