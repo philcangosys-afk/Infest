@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { TrendingUp, Eye, EyeOff } from "lucide-react";
+import { TrendingUp, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -126,6 +126,14 @@ export default function LoginPage() {
                 <span className="hidden sm:inline group-hover:text-invest-teal">Apple</span>
               </button>
             </div>
+
+            <button
+              onClick={() => navigate(demoCredentials.redirectTo)}
+              className="w-full py-3 border-2 border-invest-teal/40 text-invest-teal rounded-xl font-cairo font-bold text-sm hover:bg-invest-teal/10 transition-all duration-200 mb-8 inline-flex items-center justify-center gap-2"
+            >
+              <ShieldCheck className="w-5 h-5" />
+              الدخول عبر الهوية الرقمية SudaPass
+            </button>
 
             {/* Sign Up Link */}
             <p className="font-cairo text-center text-dark-gray text-lg">

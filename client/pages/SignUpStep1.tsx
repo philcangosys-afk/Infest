@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { TrendingUp, Eye, EyeOff, Check } from "lucide-react";
+import { TrendingUp, Eye, EyeOff, Check, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 export default function SignUpStep1() {
@@ -216,6 +216,16 @@ export default function SignUpStep1() {
               className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105"
             >
               تسجيل
+            </button>
+
+            <button
+              onClick={() => navigate(demoData.redirectTo)}
+              className="w-full py-3 border-2 border-invest-teal/40 text-invest-teal rounded-xl font-cairo font-bold text-sm hover:bg-invest-teal/10 transition-all duration-200"
+            >
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5" />
+                التسجيل عبر الهوية الرقمية SudaPass
+              </span>
             </button>
 
             {/* Login Link */}
