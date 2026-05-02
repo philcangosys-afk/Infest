@@ -16,6 +16,7 @@ import {
   FolderOpen,
   Bot,
   Wand2,
+  Award,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -32,6 +33,15 @@ export default function EntrepreneurDashboard() {
   const [activeSection, setActiveSection] = useState<SectionKey>("dashboard");
   const [advisorMode, setAdvisorMode] = useState<"pitch" | "financial" | "requests">("pitch");
   const [advisorInput, setAdvisorInput] = useState("");
+  const [personalFiles, setPersonalFiles] = useState({
+    nationalId: false,
+    personalPhoto: false,
+    bankStatement: false,
+  });
+
+  const uploadedFilesCount = Object.values(personalFiles).filter(Boolean).length;
+  const verificationPercent = Math.round((uploadedFilesCount / 3) * 100);
+  const isVerificationComplete = verificationPercent === 100;
   const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
     {
       id: 1,
@@ -227,7 +237,7 @@ export default function EntrepreneurDashboard() {
                   { icon: Briefcase, label: "عدد مشاريعي", value: "3" },
                   { icon: Users, label: "طلبات جديدة", value: "2" },
                   { icon: MessageCircle, label: "رسائل جديدة", value: "5" },
-                  { icon: Heart, label: "نسبة التحقق", value: "85%" },
+                  { icon: Heart, label: "نسبة التحقق", value: `${verificationPercent}%`, verification: true },
                 ].map((stat, idx) => {
                   const Icon = stat.icon;
                   return (
@@ -235,6 +245,12 @@ export default function EntrepreneurDashboard() {
                       <Icon className="w-8 h-8 text-invest-teal mb-3" />
                       <p className="font-cairo text-sm text-dark-gray">{stat.label}</p>
                       <p className="font-cairo font-bold text-4xl text-text-dark">{stat.value}</p>
+                      {stat.verification && isVerificationComplete && (
+                        <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-invest-teal/10 text-invest-teal font-cairo text-xs font-bold">
+                          <Award className="w-3.5 h-3.5" />
+                          شارة مميزة
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -427,12 +443,45 @@ export default function EntrepreneurDashboard() {
               <div className="p-4 border border-light-gray rounded-xl bg-light-gray/40">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-cairo text-sm font-semibold text-text-dark">اكتمال ملف رائد الأعمال</p>
-                  <p className="font-cairo text-sm font-bold text-invest-teal">82%</p>
+                  <p className="font-cairo text-sm font-bold text-invest-teal">{verificationPercent}%</p>
                 </div>
                 <div className="h-2.5 rounded-full bg-white overflow-hidden">
-                  <div className="h-full w-[82%] bg-gradient-to-l from-invest-blue to-invest-teal rounded-full"></div>
+                  <div className="h-full bg-gradient-to-l from-invest-blue to-invest-teal rounded-full" style={{ width: `${verificationPercent}%` }}></div>
                 </div>
-                <p className="font-cairo text-xs text-dark-gray mt-2">أضف نبذة الفريق وروابط الأعمال السابقة للوصول إلى 100%</p>
+                <p className="font-cairo text-xs text-dark-gray mt-2">
+                  {isVerificationComplete
+                    ? "تم رفع الملفات الشخصية بالكامل وحصلت على الشارة المميزة."
+                    : "لا يكتمل التحقق إلا بعد رفع الملفات الشخصية المطلوبة."}
+                </p>
+                {isVerificationComplete && (
+                  <span className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-invest-teal/10 text-invest-teal font-cairo text-xs font-bold">
+                    <Award className="w-3.5 h-3.5" />
+                    شارة مميزة
+                  </span>
+                )}
+              </div>
+
+              <div className="border border-light-gray rounded-xl p-4 space-y-3">
+                <p className="font-cairo font-bold text-text-dark">الملفات الشخصية المطلوبة للتحقق</p>
+                {[
+                  { key: "nationalId" as const, label: "رفع الهوية الوطنية" },
+                  { key: "personalPhoto" as const, label: "رفع الصورة الشخصية" },
+                  { key: "bankStatement" as const, label: "رفع كشف حساب/إثبات عنوان" },
+                ].map((file) => (
+                  <div key={file.key} className="flex items-center justify-between border border-light-gray rounded-lg px-3 py-2.5">
+                    <p className="font-cairo text-sm text-text-dark">{file.label}</p>
+                    <button
+                      onClick={() => setPersonalFiles((prev) => ({ ...prev, [file.key]: !prev[file.key] }))}
+                      className={`px-3 py-1.5 rounded-lg font-cairo text-xs font-bold transition ${
+                        personalFiles[file.key]
+                          ? "bg-invest-green text-white"
+                          : "bg-invest-blue text-white hover:bg-blue-900"
+                      }`}
+                    >
+                      {personalFiles[file.key] ? "تم الرفع" : "رفع الملف"}
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
