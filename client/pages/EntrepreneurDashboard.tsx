@@ -421,17 +421,56 @@ export default function EntrepreneurDashboard() {
 
           {/* Profile */}
           {activeSection === "profile" && (
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h2 className="font-cairo font-bold text-2xl mb-6">الملف الشخصي</h2>
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-5">
+              <h2 className="font-cairo font-bold text-2xl">الملف الشخصي</h2>
+
+              <div className="p-4 border border-light-gray rounded-xl bg-light-gray/40">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-cairo text-sm font-semibold text-text-dark">اكتمال ملف رائد الأعمال</p>
+                  <p className="font-cairo text-sm font-bold text-invest-teal">82%</p>
+                </div>
+                <div className="h-2.5 rounded-full bg-white overflow-hidden">
+                  <div className="h-full w-[82%] bg-gradient-to-l from-invest-blue to-invest-teal rounded-full"></div>
+                </div>
+                <p className="font-cairo text-xs text-dark-gray mt-2">أضف نبذة الفريق وروابط الأعمال السابقة للوصول إلى 100%</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">الاسم</p>
-                  <p className="font-cairo font-bold">أحمد محمد زين</p>
+                  <p className="font-cairo text-sm text-dark-gray">الاسم الكامل</p>
+                  <p className="font-cairo font-bold">زين خلف الله</p>
+                </div>
+                <div className="p-4 border rounded-xl border-light-gray">
+                  <p className="font-cairo text-sm text-dark-gray">البريد الإلكتروني</p>
+                  <p className="font-cairo font-bold">zain.founder@nileinvest.ai</p>
+                </div>
+                <div className="p-4 border rounded-xl border-light-gray">
+                  <p className="font-cairo text-sm text-dark-gray">رقم الهاتف</p>
+                  <p className="font-cairo font-bold">+249 92 345 6789</p>
                 </div>
                 <div className="p-4 border rounded-xl border-light-gray">
                   <p className="font-cairo text-sm text-dark-gray">المدينة</p>
                   <p className="font-cairo font-bold">الخرطوم - السودان</p>
                 </div>
+                <div className="p-4 border rounded-xl border-light-gray">
+                  <p className="font-cairo text-sm text-dark-gray">القطاع الرئيسي</p>
+                  <p className="font-cairo font-bold">التعليم التقني</p>
+                </div>
+                <div className="p-4 border rounded-xl border-light-gray">
+                  <p className="font-cairo text-sm text-dark-gray">مرحلة المشروع</p>
+                  <p className="font-cairo font-bold">نمو / توسع</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                  <span className="font-cairo text-sm">إظهار الملف للمستثمرين المعتمدين</span>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </label>
+                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                  <span className="font-cairo text-sm">استقبال تنبيهات المستثمرين الجدد</span>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </label>
               </div>
             </div>
           )}

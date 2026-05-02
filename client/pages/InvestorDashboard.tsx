@@ -329,20 +329,59 @@ export default function InvestorDashboard() {
           )}
 
           {activeSection === "profile" && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bg-white rounded-2xl p-6 shadow-lg space-y-5">
+              <div className="flex items-center gap-2 mb-1">
                 <User className="w-5 h-5 text-invest-teal" />
                 <h2 className="font-cairo font-bold text-xl">الملف الشخصي</h2>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
+
+              <div className="p-4 border border-light-gray rounded-xl bg-light-gray/40">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-cairo text-sm font-semibold text-text-dark">اكتمال الملف الشخصي</p>
+                  <p className="font-cairo text-sm font-bold text-invest-teal">88%</p>
+                </div>
+                <div className="h-2.5 rounded-full bg-white overflow-hidden">
+                  <div className="h-full w-[88%] bg-gradient-to-l from-invest-blue to-invest-teal rounded-full"></div>
+                </div>
+                <p className="font-cairo text-xs text-dark-gray mt-2">أضف وثيقة إثبات الدخل لإكمال الملف 100%</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">الاسم</p>
-                  <p className="font-cairo font-semibold">محمد عبدالله الفاتح</p>
+                  <p className="font-cairo text-xs text-dark-gray">الاسم الكامل</p>
+                  <p className="font-cairo font-semibold">زين العابدين</p>
+                </div>
+                <div className="border border-light-gray rounded-xl p-4">
+                  <p className="font-cairo text-xs text-dark-gray">البريد الإلكتروني</p>
+                  <p className="font-cairo font-semibold">zain.investor@nileinvest.ai</p>
+                </div>
+                <div className="border border-light-gray rounded-xl p-4">
+                  <p className="font-cairo text-xs text-dark-gray">رقم الهاتف</p>
+                  <p className="font-cairo font-semibold">+249 91 234 5678</p>
                 </div>
                 <div className="border border-light-gray rounded-xl p-4">
                   <p className="font-cairo text-xs text-dark-gray">المدينة</p>
-                  <p className="font-cairo font-semibold">الخرطوم</p>
+                  <p className="font-cairo font-semibold">الخرطوم - السودان</p>
                 </div>
+                <div className="border border-light-gray rounded-xl p-4">
+                  <p className="font-cairo text-xs text-dark-gray">نوع المستثمر</p>
+                  <p className="font-cairo font-semibold">مستثمر فردي</p>
+                </div>
+                <div className="border border-light-gray rounded-xl p-4">
+                  <p className="font-cairo text-xs text-dark-gray">الميزانية الاستثمارية</p>
+                  <p className="font-cairo font-semibold">2,000,000 - 5,000,000 ج.س</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                  <span className="font-cairo text-sm">إظهار بياناتي لرواد الأعمال المعتمدين</span>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </label>
+                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                  <span className="font-cairo text-sm">استقبال تنبيهات الفرص حسب اهتماماتي</span>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+                </label>
               </div>
             </div>
           )}
