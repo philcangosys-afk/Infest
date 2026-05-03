@@ -76,6 +76,7 @@ export default function InvestorDashboard() {
     linkedinUrl: "",
   });
   const [kycComplete, setKycComplete] = useState(false);
+  const [kycStatus, setKycStatus] = useState<"not_uploaded" | "ready_to_submit" | "under_review" | "approved">("not_uploaded");
   const [kycDocumentType, setKycDocumentType] = useState<"passport" | "national_id">("national_id");
   const [kycDocumentName, setKycDocumentName] = useState("");
   const [profileDataComplete, setProfileDataComplete] = useState(false);
@@ -142,6 +143,7 @@ export default function InvestorDashboard() {
 
     const isKycComplete = Boolean(profile.kyc_complete);
     setKycComplete(isKycComplete);
+    setKycStatus(isKycComplete ? "approved" : "not_uploaded");
     setKycDocumentName(isKycComplete ? "مستند مرفوع مسبقاً" : "");
     setProfileDataComplete(Boolean(profile.profile_data_complete));
 
@@ -208,6 +210,17 @@ export default function InvestorDashboard() {
     loadDashboardData();
   }, []);
 
+  useEffect(() => {
+    const isBasicProfileComplete = Boolean(
+      profileForm.fullName.trim() &&
+      profileForm.phone.trim() &&
+      profileForm.city.trim() &&
+      profileForm.investorType.trim() &&
+      profileForm.linkedinUrl.trim(),
+    );
+    setProfileDataComplete(isBasicProfileComplete);
+  }, [profileForm]);
+
   const toggleFavorite = async (projectId: number, isFavorite: boolean) => {
     if (!isSupabaseConfigured) {
       setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
@@ -249,8 +262,22 @@ export default function InvestorDashboard() {
     if (!file) return;
 
     setKycDocumentName(file.name);
+    setKycComplete(false);
+    setKycStatus("ready_to_submit");
+    setActionNotice("تم رفع المستند. اضغط إرسال للمراجعة.");
+  };
+
+  const submitKycForReview = () => {
+    if (!kycDocumentName) return;
+    setKycComplete(false);
+    setKycStatus("under_review");
+    setActionNotice("تم إرسال مستند KYC للمراجعة. الحالة الآن: تحت المراجعة.");
+  };
+
+  const approveKycByAdmin = () => {
+    setKycStatus("approved");
     setKycComplete(true);
-    setActionNotice("تم رفع مستند التحقق بنجاح.");
+    setActionNotice("تمت الموافقة على مستند KYC من لجنة التحقق.");
   };
 
   const sendContactRequest = async (project: Project) => {
@@ -261,7 +288,11 @@ export default function InvestorDashboard() {
     if (!currentUserId) return;
 
     if (!isVerified) {
-      setActionNotice("لا يمكن إرسال طلب التواصل قبل رفع مستند الجواز أو الرقم الوطني وإكمال الملف الشخصي.");
+      if (kycStatus === "under_review") {
+        setActionNotice("مستند KYC تحت المراجعة حالياً. يمكنك إرسال طلب التواصل بعد اعتماد اللجنة.");
+      } else {
+        setActionNotice("لا يمكن إرسال طلب التواصل قبل رفع مستند الجواز أو الرقم الوطني واعتماده ثم إكمال الملف الشخصي.");
+      }
       return;
     }
 
@@ -327,7 +358,7 @@ export default function InvestorDashboard() {
         city: profileForm.city,
         investor_type: profileForm.investorType,
         linkedin_url: profileForm.linkedinUrl,
-        kyc_complete: kycComplete,
+        kyc_complete: kycStatus === "approved",
         profile_data_complete: profileDataComplete,
       })
       .eq("id", currentUserId);
@@ -667,7 +698,7 @@ export default function InvestorDashboard() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-blue/10 text-invest-blue">KYC: {kycComplete ? "50%" : "0%"}</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-teal/10 text-invest-teal">بيانات أخرى: {profileDataComplete ? "50%" : "0%"}</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-teal/10 text-invest-teal">اكتمال البيانات الأساسية: {profileDataComplete ? "50%" : "0%"}</span>
                 </div>
               </div>
 
@@ -714,6 +745,7 @@ export default function InvestorDashboard() {
                   onChange={(e) => {
                     setKycDocumentType(e.target.value as "passport" | "national_id");
                     setKycComplete(false);
+                    setKycStatus("not_uploaded");
                     setKycDocumentName("");
                   }}
                   className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white w-full md:w-72"
@@ -730,13 +762,45 @@ export default function InvestorDashboard() {
                   <span className="font-cairo text-xs text-dark-gray">
                     {kycDocumentName ? `تم الرفع: ${kycDocumentName}` : "لم يتم رفع أي مستند بعد"}
                   </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-cairo ${
+                      kycStatus === "approved"
+                        ? "bg-invest-teal/10 text-invest-teal"
+                        : kycStatus === "under_review"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-light-gray text-dark-gray"
+                    }`}
+                  >
+                    {kycStatus === "approved"
+                      ? "تمت الموافقة"
+                      : kycStatus === "under_review"
+                        ? "تحت المراجعة"
+                        : kycStatus === "ready_to_submit"
+                          ? "جاهز للإرسال"
+                          : "غير مكتمل"}
+                  </span>
                 </div>
+
+                {kycStatus === "ready_to_submit" && (
+                  <button
+                    onClick={submitKycForReview}
+                    className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo text-sm"
+                  >
+                    إرسال للمراجعة
+                  </button>
+                )}
+
+                {kycStatus === "under_review" && (
+                  <button
+                    onClick={approveKycByAdmin}
+                    className="px-4 py-2 rounded-lg border border-invest-teal text-invest-teal font-cairo text-sm"
+                  >
+                    موافقة الادمن بعد مراجعة اللجنة
+                  </button>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <button onClick={() => setProfileDataComplete((prev) => !prev)} className="px-4 py-2 rounded-lg border border-invest-blue text-invest-blue font-cairo text-sm">
-                  {profileDataComplete ? "بيانات أخرى مكتملة" : "إكمال البيانات الأخرى"}
-                </button>
                 <button
                   onClick={saveProfile}
                   disabled={savingProfile}
