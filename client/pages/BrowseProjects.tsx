@@ -1,19 +1,25 @@
 import { Link } from "react-router-dom";
-import { Search, TrendingUp, Heart, Star, Users, Filter, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import { PROJECTS } from "../data/projects";
+import { Search, TrendingUp, Heart, Filter, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-const sectorOptions = ["التكنولوجيا", "الصحة", "التعليم", "الزراعة", "أخرى"];
-const fundingOptions = ["أقل من 100K", "100K-1M", "1M-10M", "أكثر من 10M"];
-const stageOptions = ["فكرة", "نموذج أولي", "شركة ناشئة", "نمو"];
-
-const stageToArabic: Record<string, string> = {
-  Prototype: "نموذج أولي",
-  Startup: "شركة ناشئة",
-  Growth: "نمو",
+type ProjectCard = {
+  id: number;
+  title: string;
+  entrepreneur: string;
+  category: string;
+  description: string;
+  stage: string;
+  amount: string;
 };
 
-const amountToNumber = (amount: string) => Number(amount.replace(/,/g, ""));
+const fundingOptions = ["أقل من 100K", "100K-1M", "1M-10M", "أكثر من 10M"];
+const stageOptions = ["فكرة", "نموذج أولي", "شركة ناشئة", "نمو", "Startup", "Growth", "Scale"];
+
+const amountToNumber = (amount: string) => {
+  const cleaned = amount.replace(/[^\d.]/g, "");
+  return Number(cleaned || "0");
+};
 
 const matchFundingRange = (amount: number, range: string) => {
   if (range === "أقل من 100K") return amount < 100_000;
@@ -26,6 +32,10 @@ const matchFundingRange = (amount: number, range: string) => {
 export default function BrowseProjects() {
   const [showFilters, setShowFilters] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [projects, setProjects] = useState<ProjectCard[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   const [draftSectors, setDraftSectors] = useState<string[]>([]);
   const [draftFunding, setDraftFunding] = useState<string[]>([]);
@@ -35,11 +45,64 @@ export default function BrowseProjects() {
   const [appliedFunding, setAppliedFunding] = useState<string[]>([]);
   const [appliedStages, setAppliedStages] = useState<string[]>([]);
 
+  const sectorOptions = useMemo(() => Array.from(new Set(projects.map((project) => project.category))), [projects]);
+
   const toggleInList = (current: string[], value: string) =>
     current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
 
+  useEffect(() => {
+    const loadProjects = async () => {
+      setLoading(true);
+      setErrorMessage("");
+
+      const { data: projectRows, error } = await supabase
+        .from("projects")
+        .select("id, owner_id, name, sector, description, stage, budget")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setLoading(false);
+        setErrorMessage("تعذر تحميل المشاريع من قاعدة البيانات.");
+        return;
+      }
+
+      const ownerIds = [...new Set((projectRows ?? []).map((row) => row.owner_id))];
+      const ownerMap = new Map<string, string>();
+
+      if (ownerIds.length) {
+        const { data: owners } = await supabase.from("profiles").select("id, full_name").in("id", ownerIds);
+        (owners ?? []).forEach((owner) => ownerMap.set(owner.id, owner.full_name ?? "رائد أعمال"));
+      }
+
+      setProjects(
+        (projectRows ?? []).map((row) => ({
+          id: row.id,
+          title: row.name,
+          entrepreneur: ownerMap.get(row.owner_id) ?? "رائد أعمال",
+          category: row.sector,
+          description: row.description,
+          stage: row.stage,
+          amount: row.budget,
+        })),
+      );
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: favorites } = await supabase.from("favorites").select("project_id").eq("investor_id", user.id);
+        setFavoriteIds((favorites ?? []).map((item) => item.project_id));
+      }
+
+      setLoading(false);
+    };
+
+    loadProjects();
+  }, []);
+
   const filteredProjects = useMemo(() => {
-    return PROJECTS.filter((project) => {
+    return projects.filter((project) => {
       const query = searchQuery.trim();
       const matchesSearch =
         !query ||
@@ -48,20 +111,17 @@ export default function BrowseProjects() {
         project.entrepreneur.includes(query) ||
         project.category.includes(query);
 
-      const matchesSector =
-        appliedSectors.length === 0 || appliedSectors.includes(project.category);
+      const matchesSector = appliedSectors.length === 0 || appliedSectors.includes(project.category);
 
       const amount = amountToNumber(project.amount);
       const matchesFunding =
         appliedFunding.length === 0 || appliedFunding.some((range) => matchFundingRange(amount, range));
 
-      const projectStageArabic = stageToArabic[project.stage] ?? "فكرة";
-      const matchesStage =
-        appliedStages.length === 0 || appliedStages.includes(projectStageArabic);
+      const matchesStage = appliedStages.length === 0 || appliedStages.includes(project.stage);
 
       return matchesSearch && matchesSector && matchesFunding && matchesStage;
     });
-  }, [searchQuery, appliedSectors, appliedFunding, appliedStages]);
+  }, [searchQuery, projects, appliedSectors, appliedFunding, appliedStages]);
 
   const applyFilters = () => {
     setAppliedSectors(draftSectors);
@@ -78,6 +138,41 @@ export default function BrowseProjects() {
     setAppliedStages([]);
   };
 
+  const toggleFavorite = async (projectId: number) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setErrorMessage("سجّل الدخول كمستثمر لحفظ المشاريع في اهتماماتك.");
+      return;
+    }
+
+    const isFavorite = favoriteIds.includes(projectId);
+
+    if (isFavorite) {
+      const { error } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("investor_id", user.id)
+        .eq("project_id", projectId);
+
+      if (!error) {
+        setFavoriteIds((prev) => prev.filter((id) => id !== projectId));
+      }
+      return;
+    }
+
+    const { error } = await supabase.from("favorites").insert({
+      investor_id: user.id,
+      project_id: projectId,
+    });
+
+    if (!error) {
+      setFavoriteIds((prev) => [...prev, projectId]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-light-gray" dir="rtl">
       <header className="bg-white border-b border-light-gray shadow-sm sticky top-0 z-50">
@@ -86,9 +181,7 @@ export default function BrowseProjects() {
             <div className="w-12 h-12 bg-gradient-to-br from-invest-teal to-invest-teal/80 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105">
               <TrendingUp className="w-7 h-7 text-white" />
             </div>
-            <span className="font-cairo font-bold text-2xl text-invest-blue hidden sm:inline group-hover:text-invest-teal transition">
-              Nile Invest AI
-            </span>
+            <span className="font-cairo font-bold text-2xl text-invest-blue hidden sm:inline group-hover:text-invest-teal transition">Nile Invest AI</span>
           </Link>
 
           <div className="flex-1 max-w-xl">
@@ -108,7 +201,7 @@ export default function BrowseProjects() {
             <button className="w-11 h-11 rounded-xl bg-light-gray hover:bg-invest-teal/10 flex items-center justify-center transition-all duration-200 group relative">
               <Heart className="w-6 h-6 text-dark-gray group-hover:text-invest-teal transition" />
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-invest-red text-white text-xs rounded-full flex items-center justify-center font-cairo font-bold">
-                {filteredProjects.length}
+                {favoriteIds.length}
               </span>
             </button>
 
@@ -123,6 +216,8 @@ export default function BrowseProjects() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {errorMessage && <div className="mb-4 rounded-xl border border-invest-red/20 bg-invest-red/10 p-3 font-cairo text-sm text-invest-red">{errorMessage}</div>}
+
         <div className="flex gap-8">
           <div className={`${showFilters ? "block" : "hidden"} md:block w-full md:w-72 flex-shrink-0`}>
             <div className="bg-white rounded-2xl p-6 sticky top-24 shadow-lg">
@@ -212,7 +307,7 @@ export default function BrowseProjects() {
               <div>
                 <p className="font-cairo text-sm text-dark-gray mb-1">المشاريع المتاحة</p>
                 <h2 className="font-cairo font-bold text-4xl text-invest-blue">
-                  {filteredProjects.length} <span className="text-2xl text-dark-gray">مشروع</span>
+                  {loading ? "..." : filteredProjects.length} <span className="text-2xl text-dark-gray">مشروع</span>
                 </h2>
               </div>
               <button
@@ -224,88 +319,56 @@ export default function BrowseProjects() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <div
-                  key={project.id}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-                >
-                  <div className={`relative h-56 bg-gradient-to-br ${project.gradient} overflow-hidden`}>
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl"></div>
-                      <div className="absolute bottom-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl"></div>
-                    </div>
-
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-7xl opacity-30 group-hover:scale-110 transition-transform duration-300">
-                        {project.icon}
-                      </span>
-                    </div>
-
-                    <button className="absolute top-4 right-4 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 group-hover:bg-invest-teal group-hover:text-white">
-                      <Heart className="w-6 h-6" />
-                    </button>
-
-                    <div className="absolute bottom-4 right-4 px-3 py-1 bg-white/95 backdrop-blur-sm rounded-full font-cairo text-xs font-bold text-text-dark">
-                      {project.stage}
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="font-cairo font-bold text-xl text-text-dark mb-1 line-clamp-1">{project.title}</h3>
-                    <p className="font-cairo text-sm text-dark-gray mb-4 flex items-center gap-1">
-                      <span>👤</span>
-                      {project.entrepreneur}
-                    </p>
-
-                    <div className="inline-block mb-4">
-                      <span className="font-cairo text-xs font-semibold bg-light-gray text-invest-blue px-3 py-1.5 rounded-full">
-                        {project.category}
-                      </span>
-                    </div>
-
-                    <p className="font-cairo text-sm text-dark-gray mb-5 line-clamp-2 leading-relaxed">
-                      {project.description}
-                    </p>
-
-                    <div className="h-px bg-gradient-to-r from-transparent via-light-gray to-transparent mb-5"></div>
-
-                    <div className="mb-4">
-                      <p className="font-cairo text-xs text-dark-gray mb-1">المبلغ المطلوب</p>
-                      <p className="font-cairo font-bold text-2xl text-invest-teal">
-                        {project.amount} <span className="text-sm">ج.س</span>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-5 pb-5 border-b border-light-gray">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < Math.floor(project.rating) ? "fill-yellow-400 text-yellow-400" : "text-light-gray"}`}
-                          />
-                        ))}
-                        <span className="font-cairo text-xs text-dark-gray ml-1 font-semibold">({project.rating})</span>
+            {loading ? (
+              <div className="bg-white rounded-2xl p-8 text-center border border-light-gray font-cairo text-dark-gray">جاري تحميل المشاريع...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => {
+                  const isFav = favoriteIds.includes(project.id);
+                  return (
+                    <div key={project.id} className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="relative h-40 bg-gradient-to-br from-invest-blue to-invest-teal overflow-hidden">
+                        <button
+                          onClick={() => toggleFavorite(project.id)}
+                          className="absolute top-4 right-4 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                        >
+                          <Heart className={`w-6 h-6 ${isFav ? "fill-invest-red text-invest-red" : "text-dark-gray"}`} />
+                        </button>
+                        <div className="absolute bottom-4 right-4 px-3 py-1 bg-white/95 backdrop-blur-sm rounded-full font-cairo text-xs font-bold text-text-dark">
+                          {project.stage}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-1 bg-light-gray rounded-full">
-                        <Users className="w-4 h-4 text-dark-gray" />
-                        <span className="font-cairo text-xs font-semibold text-dark-gray">{project.requests}</span>
+
+                      <div className="p-6">
+                        <h3 className="font-cairo font-bold text-xl text-text-dark mb-1 line-clamp-1">{project.title}</h3>
+                        <p className="font-cairo text-sm text-dark-gray mb-4">👤 {project.entrepreneur}</p>
+
+                        <div className="inline-block mb-4">
+                          <span className="font-cairo text-xs font-semibold bg-light-gray text-invest-blue px-3 py-1.5 rounded-full">{project.category}</span>
+                        </div>
+
+                        <p className="font-cairo text-sm text-dark-gray mb-5 line-clamp-2 leading-relaxed">{project.description}</p>
+
+                        <div className="mb-4">
+                          <p className="font-cairo text-xs text-dark-gray mb-1">المبلغ المطلوب</p>
+                          <p className="font-cairo font-bold text-2xl text-invest-teal">{project.amount} <span className="text-sm">ج.س</span></p>
+                        </div>
+
+                        <Link
+                          to={`/project-details/${project.id}`}
+                          className="w-full py-3 bg-gradient-to-r from-invest-teal to-invest-teal/90 text-white rounded-lg font-cairo font-bold text-sm hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <span>عرض التفاصيل</span>
+                          <span>→</span>
+                        </Link>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
 
-                    <Link
-                      to={`/project-details/${project.id}`}
-                      className="w-full py-3 bg-gradient-to-r from-invest-teal to-invest-teal/90 text-white rounded-lg font-cairo font-bold text-sm hover:shadow-lg transition-all duration-200 group-hover:shadow-invest-teal/50 flex items-center justify-center gap-2"
-                    >
-                      <span>عرض التفاصيل</span>
-                      <span>→</span>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredProjects.length === 0 && (
+            {!loading && filteredProjects.length === 0 && (
               <div className="mt-8 bg-white rounded-2xl p-8 text-center border border-light-gray">
                 <p className="font-cairo text-dark-gray">لا توجد مشاريع مطابقة للبحث أو الفلاتر الحالية.</p>
               </div>

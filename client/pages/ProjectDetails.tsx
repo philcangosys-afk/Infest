@@ -1,10 +1,75 @@
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, TrendingUp, Star, Users } from "lucide-react";
-import { PROJECTS } from "../data/projects";
+import { ArrowLeft, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+type ProjectDetailsData = {
+  id: number;
+  name: string;
+  description: string;
+  sector: string;
+  stage: string;
+  budget: string;
+  entrepreneurName: string;
+};
 
 export default function ProjectDetails() {
   const { id } = useParams();
-  const project = PROJECTS.find((item) => item.id === Number(id));
+  const [project, setProject] = useState<ProjectDetailsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProject = async () => {
+      setLoading(true);
+      const numericId = Number(id);
+      if (!numericId) {
+        setProject(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data: projectRow, error } = await supabase
+        .from("projects")
+        .select("id, owner_id, name, description, sector, stage, budget")
+        .eq("id", numericId)
+        .single();
+
+      if (error || !projectRow) {
+        setProject(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data: owner } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", projectRow.owner_id)
+        .single();
+
+      setProject({
+        id: projectRow.id,
+        name: projectRow.name,
+        description: projectRow.description,
+        sector: projectRow.sector,
+        stage: projectRow.stage,
+        budget: projectRow.budget,
+        entrepreneurName: owner?.full_name ?? "رائد أعمال",
+      });
+      setLoading(false);
+    };
+
+    loadProject();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-light-gray flex items-center justify-center p-6" dir="rtl">
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-light-gray text-center max-w-lg w-full font-cairo text-dark-gray">
+          جاري تحميل تفاصيل المشروع...
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -42,16 +107,16 @@ export default function ProjectDetails() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className={`rounded-3xl p-8 bg-gradient-to-br ${project.gradient} text-white mb-6`}>
-          <p className="font-cairo text-sm mb-2">{project.category}</p>
-          <h1 className="font-cairo font-bold text-4xl mb-2">{project.title}</h1>
+        <div className="rounded-3xl p-8 bg-gradient-to-br from-invest-blue to-invest-teal text-white mb-6">
+          <p className="font-cairo text-sm mb-2">{project.sector}</p>
+          <h1 className="font-cairo font-bold text-4xl mb-2">{project.name}</h1>
           <p className="font-cairo text-white/90">{project.description}</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl p-4 border border-light-gray">
             <p className="font-cairo text-xs text-dark-gray">رائد الأعمال</p>
-            <p className="font-cairo font-bold text-text-dark">{project.entrepreneur}</p>
+            <p className="font-cairo font-bold text-text-dark">{project.entrepreneurName}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-light-gray">
             <p className="font-cairo text-xs text-dark-gray">المرحلة</p>
@@ -59,22 +124,7 @@ export default function ProjectDetails() {
           </div>
           <div className="bg-white rounded-xl p-4 border border-light-gray">
             <p className="font-cairo text-xs text-dark-gray">المبلغ المطلوب</p>
-            <p className="font-cairo font-bold text-invest-teal">{project.amount} ج.س</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-light-gray">
-          <h2 className="font-cairo font-bold text-xl mb-4">مؤشرات المشروع</h2>
-          <div className="flex flex-wrap items-center gap-5">
-            <div className="flex items-center gap-2">
-              <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="font-cairo text-sm">التقييم: {project.rating} / 5</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-invest-blue" />
-              <span className="font-cairo text-sm">عدد المستثمرين المهتمين: {project.requests}</span>
-            </div>
-            <div className="font-cairo text-sm text-dark-gray">عدد المراجعات: {project.reviews}</div>
+            <p className="font-cairo font-bold text-invest-teal">{project.budget} ج.س</p>
           </div>
         </div>
       </main>

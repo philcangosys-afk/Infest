@@ -16,6 +16,7 @@ import {
   Quote,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Audience = "investor" | "entrepreneur";
 
@@ -31,80 +32,51 @@ type ShowcaseProject = {
   icon: string;
 };
 
-const DEFAULT_PROJECT_SHOWCASE: ShowcaseProject[] = [
-  {
-    id: 1,
-    title: "منصة التعليم الذكي",
-    sector: "التعليم",
-    founder: "زين خلف الله",
-    progress: 78,
-    raised: "1,950,000",
-    target: "2,500,000",
-    accent: "from-blue-500 to-indigo-500",
-    icon: "🎓",
-  },
-  {
-    id: 2,
-    title: "نمو الزراعة الذكية",
-    sector: "الزراعة",
-    founder: "سارة نور",
-    progress: 64,
-    raised: "1,150,000",
-    target: "1,800,000",
-    accent: "from-emerald-500 to-teal-500",
-    icon: "🌱",
-  },
-  {
-    id: 3,
-    title: "حلول الطاقة المتجددة",
-    sector: "الطاقة",
-    founder: "خالد عثمان",
-    progress: 42,
-    raised: "1,470,000",
-    target: "3,500,000",
-    accent: "from-amber-500 to-orange-500",
-    icon: "⚡",
-  },
-];
+const accents = ["from-blue-500 to-indigo-500", "from-emerald-500 to-teal-500", "from-amber-500 to-orange-500"];
+const icons = ["🚀", "💡", "📊"];
 
 export default function Index() {
   const [audience, setAudience] = useState<Audience>("investor");
   const [activeProject, setActiveProject] = useState(0);
-  const [projectShowcase, setProjectShowcase] = useState<ShowcaseProject[]>(DEFAULT_PROJECT_SHOWCASE);
+  const [projectShowcase, setProjectShowcase] = useState<ShowcaseProject[]>([]);
 
   useEffect(() => {
-    const storedProjects = localStorage.getItem("nile_invest_custom_projects");
-    if (!storedProjects) return;
+    const loadShowcase = async () => {
+      const { data: projectRows } = await supabase
+        .from("projects")
+        .select("id, owner_id, name, sector, budget")
+        .order("created_at", { ascending: false })
+        .limit(6);
 
-    try {
-      const parsedProjects = JSON.parse(storedProjects) as {
-        id: number;
-        name: string;
-        sector: string;
-        budget: string;
-      }[];
+      if (!projectRows?.length) {
+        setProjectShowcase([]);
+        return;
+      }
 
-      if (!parsedProjects.length) return;
+      const ownerIds = [...new Set(projectRows.map((row) => row.owner_id))];
+      const ownerMap = new Map<string, string>();
 
-      const accents = ["from-blue-500 to-indigo-500", "from-emerald-500 to-teal-500", "from-amber-500 to-orange-500"];
-      const icons = ["🚀", "💡", "📊"];
+      if (ownerIds.length) {
+        const { data: owners } = await supabase.from("profiles").select("id, full_name").in("id", ownerIds);
+        (owners ?? []).forEach((owner) => ownerMap.set(owner.id, owner.full_name ?? "رائد أعمال"));
+      }
 
-      const customShowcase: ShowcaseProject[] = parsedProjects.map((project, index) => ({
+      const mapped: ShowcaseProject[] = projectRows.map((project, index) => ({
         id: project.id,
         title: project.name,
         sector: project.sector,
-        founder: "زين خلف الله",
-        progress: 15,
+        founder: ownerMap.get(project.owner_id) ?? "رائد أعمال",
+        progress: 20,
         raised: "0",
         target: project.budget,
         accent: accents[index % accents.length],
         icon: icons[index % icons.length],
       }));
 
-      setProjectShowcase([...customShowcase, ...DEFAULT_PROJECT_SHOWCASE]);
-    } catch {
-      setProjectShowcase(DEFAULT_PROJECT_SHOWCASE);
-    }
+      setProjectShowcase(mapped);
+    };
+
+    loadShowcase();
   }, []);
 
   // Auto-rotate showcase
@@ -144,7 +116,7 @@ export default function Index() {
     } as const;
   }, [audience]);
 
-  const project = projectShowcase[activeProject] ?? DEFAULT_PROJECT_SHOWCASE[0];
+  const project = projectShowcase[activeProject];
 
   return (
     <div className="w-full min-h-screen bg-white" dir="rtl">
@@ -287,81 +259,73 @@ export default function Index() {
                 <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-br from-invest-blue/30 to-transparent rounded-2xl -rotate-12"></div>
 
                 <div className="relative bg-white rounded-3xl shadow-2xl border border-light-gray overflow-hidden">
-                  {/* Header bar */}
-                  <div className={`h-2 bg-gradient-to-r ${project.accent}`}></div>
+                  {project ? (
+                    <>
+                      <div className={`h-2 bg-gradient-to-r ${project.accent}`}></div>
 
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${project.accent} flex items-center justify-center text-3xl shadow-lg`}>
-                          {project.icon}
+                      <div className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${project.accent} flex items-center justify-center text-3xl shadow-lg`}>
+                              {project.icon}
+                            </div>
+                            <div>
+                              <p className="font-cairo text-xs text-dark-gray">{project.sector}</p>
+                              <h3 className="font-cairo font-bold text-lg text-text-dark">{project.title}</h3>
+                              <p className="font-cairo text-xs text-dark-gray">رائد الأعمال: {project.founder}</p>
+                            </div>
+                          </div>
+                          <button className="w-9 h-9 rounded-full bg-light-gray hover:bg-invest-teal/10 transition flex items-center justify-center">
+                            <Heart className="w-4 h-4 text-invest-red" />
+                          </button>
                         </div>
-                        <div>
-                          <p className="font-cairo text-xs text-dark-gray">{project.sector}</p>
-                          <h3 className="font-cairo font-bold text-lg text-text-dark">{project.title}</h3>
-                          <p className="font-cairo text-xs text-dark-gray">رائد الأعمال: {project.founder}</p>
+
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-cairo text-xs text-dark-gray">تم تمويله</span>
+                            <span className="font-cairo text-xs font-bold text-invest-blue">{project.progress}%</span>
+                          </div>
+                          <div className="h-2 bg-light-gray rounded-full overflow-hidden">
+                            <div className={`h-full bg-gradient-to-r ${project.accent} rounded-full transition-all duration-700`} style={{ width: `${project.progress}%` }}></div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="bg-light-gray rounded-xl p-3">
+                            <p className="font-cairo text-[10px] text-dark-gray">الجمع</p>
+                            <p className="font-cairo font-bold text-sm text-invest-teal">{project.raised} ج.س</p>
+                          </div>
+                          <div className="bg-light-gray rounded-xl p-3">
+                            <p className="font-cairo text-[10px] text-dark-gray">المستهدف</p>
+                            <p className="font-cairo font-bold text-sm text-invest-blue">{project.target} ج.س</p>
+                          </div>
+                        </div>
+
+                        <Link
+                          to="/browse-projects"
+                          className="w-full inline-flex items-center justify-center gap-2 py-3 bg-invest-blue text-white rounded-xl font-cairo font-bold text-sm hover:bg-blue-900 transition"
+                        >
+                          عرض التفاصيل
+                          <ArrowLeft className="w-4 h-4" />
+                        </Link>
+
+                        <div className="flex items-center justify-center gap-2 mt-5">
+                          {projectShowcase.map((p, idx) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setActiveProject(idx)}
+                              className={`h-2 rounded-full transition-all ${idx === activeProject ? "w-8 bg-invest-teal" : "w-2 bg-light-gray hover:bg-dark-gray/40"}`}
+                              aria-label={`عرض المشروع ${idx + 1}`}
+                            />
+                          ))}
                         </div>
                       </div>
-                      <button className="w-9 h-9 rounded-full bg-light-gray hover:bg-invest-teal/10 transition flex items-center justify-center">
-                        <Heart className="w-4 h-4 text-invest-red" />
-                      </button>
+                    </>
+                  ) : (
+                    <div className="p-10 text-center">
+                      <p className="font-cairo text-dark-gray">لا توجد مشاريع منشورة بعد في قاعدة البيانات.</p>
                     </div>
-
-                    {/* Progress */}
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-cairo text-xs text-dark-gray">تم تمويله</span>
-                        <span className="font-cairo text-xs font-bold text-invest-blue">
-                          {project.progress}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-light-gray rounded-full overflow-hidden">
-                        <div
-                          className={`h-full bg-gradient-to-r ${project.accent} rounded-full transition-all duration-700`}
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-light-gray rounded-xl p-3">
-                        <p className="font-cairo text-[10px] text-dark-gray">الجمع</p>
-                        <p className="font-cairo font-bold text-sm text-invest-teal">
-                          {project.raised} ج.س
-                        </p>
-                      </div>
-                      <div className="bg-light-gray rounded-xl p-3">
-                        <p className="font-cairo text-[10px] text-dark-gray">المستهدف</p>
-                        <p className="font-cairo font-bold text-sm text-invest-blue">
-                          {project.target} ج.س
-                        </p>
-                      </div>
-                    </div>
-
-                    <Link
-                      to="/browse-projects"
-                      className="w-full inline-flex items-center justify-center gap-2 py-3 bg-invest-blue text-white rounded-xl font-cairo font-bold text-sm hover:bg-blue-900 transition"
-                    >
-                      عرض التفاصيل
-                      <ArrowLeft className="w-4 h-4" />
-                    </Link>
-
-                    {/* dots */}
-                    <div className="flex items-center justify-center gap-2 mt-5">
-                      {projectShowcase.map((p, idx) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setActiveProject(idx)}
-                          className={`h-2 rounded-full transition-all ${
-                            idx === activeProject
-                              ? "w-8 bg-invest-teal"
-                              : "w-2 bg-light-gray hover:bg-dark-gray/40"
-                          }`}
-                          aria-label={`عرض المشروع ${idx + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Floating chips */}

@@ -1,6 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff, Check } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function SignUpStep1() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,39 +11,19 @@ export default function SignUpStep1() {
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") === "entrepreneur" ? "entrepreneur" : "investor";
 
-  const demoData =
-    role === "entrepreneur"
-      ? {
-          fullName: "زين خلف الله",
-          email: "zain.founder@nileinvest.ai",
-          password: "Founder@123",
-          phone: "+249923456789",
-          city: "الخرطوم",
-          address: "الرياض - شارع الستين",
-          redirectTo: "/dashboard",
-        }
-      : {
-          fullName: "زين العابدين",
-          email: "zain.investor@nileinvest.ai",
-          password: "Investor@123",
-          phone: "+249912345678",
-          city: "الخرطوم",
-          address: "العمارات - شارع 61",
-          redirectTo: "/investor-dashboard",
-        };
-
-  const [fullName, setFullName] = useState(demoData.fullName);
-  const [email, setEmail] = useState(demoData.email);
-  const [password, setPassword] = useState(demoData.password);
-  const [confirmPassword, setConfirmPassword] = useState(demoData.password);
-  const [phone, setPhone] = useState(demoData.phone);
-  const [city, setCity] = useState(demoData.city);
-  const [address, setAddress] = useState(demoData.address);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
-    // Calculate password strength
     let strength = 0;
     if (value.length >= 8) strength++;
     if (/[A-Z]/.test(value)) strength++;
@@ -63,31 +44,90 @@ export default function SignUpStep1() {
     return "قوية";
   };
 
+  const handleSignUp = async () => {
+    setErrorMessage("");
+
+    if (!fullName || !email || !phone || !city || !address || !password) {
+      setErrorMessage("يرجى إكمال جميع الحقول المطلوبة.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("كلمة المرور وتأكيد كلمة المرور غير متطابقين.");
+      return;
+    }
+
+    if (!agreeTerms) {
+      setErrorMessage("يجب الموافقة على الشروط والأحكام.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          full_name: fullName,
+          phone,
+          city,
+          address,
+        },
+      },
+    });
+
+    if (error || !data.user) {
+      setLoading(false);
+      setErrorMessage("تعذر إنشاء الحساب. تأكد من البريد الإلكتروني أو حاول لاحقاً.");
+      return;
+    }
+
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: data.user.id,
+      role,
+      full_name: fullName,
+      phone,
+      city,
+      address,
+      investor_type: role === "investor" ? "مستثمر فردي" : null,
+      main_sector: role === "entrepreneur" ? "غير محدد" : null,
+      project_stage: role === "entrepreneur" ? "غير محدد" : null,
+      profile_data_complete: true,
+      kyc_complete: false,
+      national_id_uploaded: false,
+      personal_photo_uploaded: false,
+    });
+
+    if (profileError) {
+      setLoading(false);
+      setErrorMessage("تم إنشاء الحساب لكن تعذر حفظ الملف الشخصي.");
+      return;
+    }
+
+    setLoading(false);
+    navigate(role === "entrepreneur" ? "/dashboard" : "/investor-dashboard");
+  };
+
   return (
     <div className="min-h-screen bg-white" dir="rtl">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        {/* Left Side - Form */}
         <div className="flex flex-col justify-center px-8 sm:px-12 py-12">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 bg-invest-teal rounded-lg flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
-            <span className="font-cairo font-bold text-lg text-invest-blue">
-              Nile Invest AI
-            </span>
+            <span className="font-cairo font-bold text-lg text-invest-blue">Nile Invest AI</span>
           </Link>
 
-          {/* Progress Bar */}
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <span className="font-cairo text-sm font-bold text-invest-teal uppercase tracking-widest bg-invest-teal/10 px-4 py-2 rounded-full inline-block mb-4">
                   📝 الخطوة 1 من 3
                 </span>
-                <h1 className="font-cairo text-4xl sm:text-5xl font-bold text-invest-blue mt-3">
-                  إنشاء حساب جديد
-                </h1>
+                <h1 className="font-cairo text-4xl sm:text-5xl font-bold text-invest-blue mt-3">إنشاء حساب جديد</h1>
               </div>
             </div>
             <div>
@@ -98,22 +138,9 @@ export default function SignUpStep1() {
             </div>
           </div>
 
-          <div className="mb-8 p-4 bg-light-gray border border-light-gray rounded-xl">
-            <p className="font-cairo text-xs text-dark-gray mb-1">بيانات تجريبية جاهزة للتسجيل:</p>
-            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.fullName}</p>
-            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.email}</p>
-            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.password}</p>
-            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.phone}</p>
-            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.city} - {demoData.address}</p>
-          </div>
-
-          {/* Form Content */}
           <div className="space-y-8">
-            {/* Full Name Field */}
             <div>
-              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                الاسم الكامل
-              </label>
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">الاسم الكامل</label>
               <input
                 type="text"
                 value={fullName}
@@ -123,11 +150,8 @@ export default function SignUpStep1() {
               />
             </div>
 
-            {/* Email Field */}
             <div>
-              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                البريد الإلكتروني
-              </label>
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">البريد الإلكتروني</label>
               <input
                 type="email"
                 value={email}
@@ -139,9 +163,7 @@ export default function SignUpStep1() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                  رقم الهاتف
-                </label>
+                <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">رقم الهاتف</label>
                 <input
                   type="tel"
                   value={phone}
@@ -151,9 +173,7 @@ export default function SignUpStep1() {
                 />
               </div>
               <div>
-                <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                  المدينة
-                </label>
+                <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">المدينة</label>
                 <input
                   type="text"
                   value={city}
@@ -165,9 +185,7 @@ export default function SignUpStep1() {
             </div>
 
             <div>
-              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                العنوان
-              </label>
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">العنوان</label>
               <input
                 type="text"
                 value={address}
@@ -177,11 +195,8 @@ export default function SignUpStep1() {
               />
             </div>
 
-            {/* Password Field */}
             <div>
-              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                كلمة المرور
-              </label>
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">كلمة المرور</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -191,25 +206,18 @@ export default function SignUpStep1() {
                   className="w-full px-6 py-4 pr-14 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
                 />
                 <button
+                  type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-gray hover:text-invest-blue transition p-2 hover:bg-light-gray rounded-lg"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
 
-              {/* Password Strength Indicator */}
               {password && (
                 <div className="mt-4">
                   <div className="h-2.5 bg-light-gray rounded-full overflow-hidden shadow-sm">
-                    <div
-                      className={`h-full ${getPasswordStrengthColor()} rounded-full transition-all duration-300`}
-                      style={{ width: `${(passwordStrength / 4) * 100}%` }}
-                    ></div>
+                    <div className={`h-full ${getPasswordStrengthColor()} rounded-full transition-all duration-300`} style={{ width: `${(passwordStrength / 4) * 100}%` }}></div>
                   </div>
                   <p className="font-cairo text-sm text-dark-gray mt-2 font-semibold">
                     قوة كلمة المرور: <span className="text-invest-teal">{getPasswordStrengthText()}</span>
@@ -218,11 +226,8 @@ export default function SignUpStep1() {
               )}
             </div>
 
-            {/* Confirm Password Field */}
             <div>
-              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
-                تأكيد كلمة المرور
-              </label>
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">تأكيد كلمة المرور</label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -232,19 +237,15 @@ export default function SignUpStep1() {
                   className="w-full px-6 py-4 pr-14 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
                 />
                 <button
+                  type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-gray hover:text-invest-blue transition p-2 hover:bg-light-gray rounded-lg"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Terms Checkbox */}
             <div className="flex items-start gap-4 p-5 bg-light-gray rounded-xl border-2 border-light-gray">
               <input
                 type="checkbox"
@@ -254,22 +255,22 @@ export default function SignUpStep1() {
                 className="w-6 h-6 mt-0.5 rounded border-2 border-invest-teal text-invest-teal cursor-pointer accent-invest-teal"
               />
               <label htmlFor="terms" className="font-cairo text-sm text-dark-gray cursor-pointer flex-1 font-semibold">
-                أوافق على{" "}
-                <a href="#" className="text-invest-teal font-bold hover:underline">
-                  الشروط والأحكام والسياسات
-                </a>
+                أوافق على <span className="text-invest-teal font-bold">الشروط والأحكام والسياسات</span>
               </label>
             </div>
 
-            {/* Next Button */}
+            {errorMessage && (
+              <div className="rounded-xl border border-invest-red/20 bg-invest-red/10 p-3 font-cairo text-sm text-invest-red">{errorMessage}</div>
+            )}
+
             <button
-              onClick={() => navigate(demoData.redirectTo)}
-              className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105"
+              onClick={handleSignUp}
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
             >
-              تسجيل
+              {loading ? "جاري إنشاء الحساب..." : "تسجيل"}
             </button>
 
-            {/* Login Link */}
             <p className="font-cairo text-center text-dark-gray text-lg">
               هل لديك حساب؟{" "}
               <Link to={`/login?role=${role}`} className="text-invest-teal font-bold hover:underline">
@@ -279,7 +280,6 @@ export default function SignUpStep1() {
           </div>
         </div>
 
-        {/* Right Side - Illustration */}
         <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-invest-blue via-invest-blue to-invest-teal p-12">
           <div className="text-center text-white">
             <div className="relative mb-12">
@@ -291,11 +291,8 @@ export default function SignUpStep1() {
               </div>
             </div>
 
-            <h2 className="font-cairo text-3xl font-bold mb-6">
-              كل فكرة عظيمة تستحق فرصة للنجاح!
-            </h2>
+            <h2 className="font-cairo text-3xl font-bold mb-6">كل فكرة عظيمة تستحق فرصة للنجاح!</h2>
 
-            {/* Benefits */}
             <div className="space-y-3 mt-8">
               <div className="flex items-center gap-2">
                 <Check className="w-5 h-5 flex-shrink-0" />

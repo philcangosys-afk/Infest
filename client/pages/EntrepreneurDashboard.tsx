@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   TrendingUp,
   Bell,
@@ -12,89 +12,67 @@ import {
   CheckCircle,
   XCircle,
   User,
-  FolderOpen,
   Bot,
   Wand2,
   Award,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-type SectionKey =
-  | "dashboard"
-  | "projects"
-  | "requests"
-  | "messages"
-  | "profile";
+type SectionKey = "dashboard" | "projects" | "requests" | "messages" | "profile";
 
 type EntrepreneurProject = {
   id: number;
   name: string;
   status: string;
   statusColor: string;
-  requests: number;
   date: string;
-  image: string;
   sector: string;
   budget: string;
   description: string;
   duration: string;
 };
 
-const INITIAL_ENTREPRENEUR_PROJECTS: EntrepreneurProject[] = [
-  {
-    id: 1,
-    name: "تطبيق التعليم الذكي",
-    status: "نشط",
-    statusColor: "bg-invest-green",
-    requests: 3,
-    date: "2024/06/15",
-    image: "bg-gradient-to-br from-blue-400 to-blue-600",
-    sector: "التعليم",
-    budget: "2,500,000",
-    description: "منصة تعليمية تفاعلية مدعومة بالذكاء الاصطناعي للطلاب.",
-    duration: "12 شهر",
-  },
-  {
-    id: 2,
-    name: "منصة الزراعة الذكية",
-    status: "معلق",
-    statusColor: "bg-invest-orange",
-    requests: 2,
-    date: "2024/05/10",
-    image: "bg-gradient-to-br from-green-400 to-green-600",
-    sector: "الزراعة",
-    budget: "1,800,000",
-    description: "حل رقمي لمتابعة المزارع والإنتاجية وسلاسل التوريد.",
-    duration: "10 شهر",
-  },
-  {
-    id: 3,
-    name: "حلول الصحة الرقمية",
-    status: "مراجعة",
-    statusColor: "bg-invest-blue",
-    requests: 5,
-    date: "2024/04/20",
-    image: "bg-gradient-to-br from-red-400 to-red-600",
-    sector: "الصحة",
-    budget: "3,500,000",
-    description: "خدمات متابعة طبية رقمية مع إدارة ملفات المرضى.",
-    duration: "14 شهر",
-  },
-];
+type InvestorRequest = {
+  id: number;
+  investorName: string;
+  projectName: string;
+  message: string;
+  date: string;
+  time: string;
+  status: string;
+};
+
+type ProfileForm = {
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  mainSector: string;
+  projectStage: string;
+};
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}/${m}/${day}`;
+};
+
+const formatTime = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
 
 export default function EntrepreneurDashboard() {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SectionKey>("dashboard");
   const [advisorMode, setAdvisorMode] = useState<"pitch" | "financial" | "requests">("pitch");
   const [advisorInput, setAdvisorInput] = useState("");
-  const [selectedAdvisorProject, setSelectedAdvisorProject] = useState("تطبيق التعليم الذكي");
-  const [personalFiles, setPersonalFiles] = useState({
-    nationalId: false,
-    personalPhoto: false,
-  });
-
-  const uploadedFilesCount = Object.values(personalFiles).filter(Boolean).length;
-  const verificationPercent = Math.round((uploadedFilesCount / 2) * 100);
-  const isVerificationComplete = verificationPercent === 100;
+  const [selectedAdvisorProject, setSelectedAdvisorProject] = useState("");
   const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
     {
       id: 1,
@@ -102,7 +80,15 @@ export default function EntrepreneurDashboard() {
       text: "مرحبًا، أنا مستشارك الذكي. اكتب سؤالك عن التمويل أو العرض التقديمي وسأساعدك مباشرة.",
     },
   ]);
-  const [projects, setProjects] = useState<EntrepreneurProject[]>(INITIAL_ENTREPRENEUR_PROJECTS);
+
+  const [projects, setProjects] = useState<EntrepreneurProject[]>([]);
+  const [requests, setRequests] = useState<InvestorRequest[]>([]);
+  const [messages] = useState([
+    { id: 1, name: "محمد صلاح", text: "أحتاج مزيد من التفاصيل المالية", time: "10:24" },
+    { id: 2, name: "نجلاء حسن", text: "أرسلت عرض الاستثمار", time: "09:10" },
+    { id: 3, name: "عبدالرحمن آدم", text: "متى يمكننا الاجتماع؟", time: "أمس" },
+  ]);
+
   const [projectForm, setProjectForm] = useState({
     name: "",
     sector: "",
@@ -111,40 +97,242 @@ export default function EntrepreneurDashboard() {
     description: "",
   });
 
-  useEffect(() => {
-    const storedProjects = localStorage.getItem("nile_invest_custom_projects");
-    if (!storedProjects) return;
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
+    fullName: "",
+    email: "",
+    phone: "",
+    city: "",
+    mainSector: "",
+    projectStage: "",
+  });
 
-    const parsedProjects = JSON.parse(storedProjects) as EntrepreneurProject[];
-    setProjects([...parsedProjects, ...INITIAL_ENTREPRENEUR_PROJECTS]);
+  const [personalFiles, setPersonalFiles] = useState({
+    nationalId: false,
+    personalPhoto: false,
+  });
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [actionNotice, setActionNotice] = useState("");
+
+  const uploadedFilesCount = Object.values(personalFiles).filter(Boolean).length;
+  const verificationPercent = Math.round((uploadedFilesCount / 2) * 100);
+  const isVerificationComplete = verificationPercent === 100;
+
+  const loadDashboardData = async () => {
+    setLoading(true);
+    setActionNotice("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      navigate("/login?role=entrepreneur");
+      return;
+    }
+
+    setCurrentUserId(user.id);
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select(
+        "role, full_name, phone, city, main_sector, project_stage, national_id_uploaded, personal_photo_uploaded",
+      )
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      setLoading(false);
+      setActionNotice("تعذر تحميل الملف الشخصي من قاعدة البيانات.");
+      return;
+    }
+
+    if (profile.role !== "entrepreneur") {
+      navigate("/investor-dashboard");
+      return;
+    }
+
+    setProfileForm({
+      fullName: profile.full_name ?? "",
+      email: user.email ?? "",
+      phone: profile.phone ?? "",
+      city: profile.city ?? "",
+      mainSector: profile.main_sector ?? "",
+      projectStage: profile.project_stage ?? "",
+    });
+
+    setPersonalFiles({
+      nationalId: Boolean(profile.national_id_uploaded),
+      personalPhoto: Boolean(profile.personal_photo_uploaded),
+    });
+
+    const { data: projectRows, error: projectsError } = await supabase
+      .from("projects")
+      .select("id, name, status, status_color, created_at, sector, budget, description, duration")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (projectsError) {
+      setLoading(false);
+      setActionNotice("تعذر تحميل مشاريعك.");
+      return;
+    }
+
+    const mappedProjects: EntrepreneurProject[] = (projectRows ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      status: row.status,
+      statusColor: row.status_color || "bg-invest-blue",
+      date: formatDate(row.created_at),
+      sector: row.sector,
+      budget: row.budget,
+      description: row.description,
+      duration: row.duration || "غير محدد",
+    }));
+
+    setProjects(mappedProjects);
+    if (mappedProjects.length && !selectedAdvisorProject) {
+      setSelectedAdvisorProject(mappedProjects[0].name);
+    }
+
+    const { data: requestRows } = await supabase
+      .from("investment_requests")
+      .select("id, investor_id, project_id, message, status, created_at")
+      .eq("entrepreneur_id", user.id)
+      .eq("status", "تم الإرسال")
+      .order("created_at", { ascending: false });
+
+    const investorIds = [...new Set((requestRows ?? []).map((row) => row.investor_id))];
+    const projectIds = [...new Set((requestRows ?? []).map((row) => row.project_id))];
+
+    const investorNameMap = new Map<string, string>();
+    if (investorIds.length) {
+      const { data: investors } = await supabase.from("profiles").select("id, full_name").in("id", investorIds);
+      (investors ?? []).forEach((investor) => investorNameMap.set(investor.id, investor.full_name ?? "مستثمر"));
+    }
+
+    const projectNameMap = new Map<number, string>();
+    if (projectIds.length) {
+      const { data: requestProjects } = await supabase.from("projects").select("id, name").in("id", projectIds);
+      (requestProjects ?? []).forEach((item) => projectNameMap.set(item.id, item.name));
+    }
+
+    setRequests(
+      (requestRows ?? []).map((row) => ({
+        id: row.id,
+        investorName: investorNameMap.get(row.investor_id) ?? "مستثمر",
+        projectName: projectNameMap.get(row.project_id) ?? "مشروع",
+        message: row.message || `طلب تواصل جديد بخصوص ${projectNameMap.get(row.project_id) ?? "المشروع"}`,
+        date: formatDate(row.created_at),
+        time: formatTime(row.created_at),
+        status: row.status,
+      })),
+    );
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadDashboardData();
   }, []);
 
-  const handleAddProject = () => {
-    if (!projectForm.name || !projectForm.sector || !projectForm.budget || !projectForm.description) return;
+  const handleAddProject = async () => {
+    if (!currentUserId) return;
+    if (!projectForm.name || !projectForm.sector || !projectForm.budget || !projectForm.description) {
+      setActionNotice("يرجى إكمال بيانات المشروع قبل الإضافة.");
+      return;
+    }
 
-    const newProject: EntrepreneurProject = {
-      id: Date.now(),
-      name: projectForm.name,
-      status: "قيد المراجعة",
-      statusColor: "bg-invest-blue",
-      requests: 0,
-      date: new Date().toISOString().slice(0, 10).replace(/-/g, "/"),
-      image: "bg-gradient-to-br from-indigo-400 to-indigo-600",
-      sector: projectForm.sector,
-      budget: projectForm.budget,
-      description: projectForm.description,
-      duration: projectForm.duration || "غير محدد",
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({
+        owner_id: currentUserId,
+        name: projectForm.name,
+        sector: projectForm.sector,
+        budget: projectForm.budget,
+        duration: projectForm.duration || "غير محدد",
+        description: projectForm.description,
+        status: "قيد المراجعة",
+        status_color: "bg-invest-blue",
+      })
+      .select("id, name, status, status_color, created_at, sector, budget, description, duration")
+      .single();
+
+    if (error || !data) {
+      setActionNotice("تعذر إضافة المشروع إلى قاعدة البيانات.");
+      return;
+    }
+
+    const mappedProject: EntrepreneurProject = {
+      id: data.id,
+      name: data.name,
+      status: data.status,
+      statusColor: data.status_color,
+      date: formatDate(data.created_at),
+      sector: data.sector,
+      budget: data.budget,
+      description: data.description,
+      duration: data.duration || "غير محدد",
     };
 
-    const updatedProjects = [newProject, ...projects];
-    setProjects(updatedProjects);
-    setSelectedAdvisorProject(newProject.name);
+    setProjects((prev) => [mappedProject, ...prev]);
+    setSelectedAdvisorProject(mappedProject.name);
     setProjectForm({ name: "", sector: "", budget: "", duration: "", description: "" });
+    setActionNotice("تم إضافة المشروع بنجاح.");
+  };
 
-    localStorage.setItem(
-      "nile_invest_custom_projects",
-      JSON.stringify(updatedProjects.filter((project) => project.id > 1000)),
-    );
+  const handleDeleteProject = async (projectId: number) => {
+    const { error } = await supabase.from("projects").delete().eq("id", projectId);
+
+    if (error) {
+      setActionNotice("تعذر حذف المشروع.");
+      return;
+    }
+
+    setProjects((prev) => prev.filter((item) => item.id !== projectId));
+    setActionNotice("تم حذف المشروع.");
+  };
+
+  const handleRequestDecision = async (requestId: number, status: "مقبول" | "مرفوض") => {
+    const { error } = await supabase.from("investment_requests").update({ status }).eq("id", requestId);
+
+    if (error) {
+      setActionNotice("تعذر تحديث حالة الطلب.");
+      return;
+    }
+
+    setRequests((prev) => prev.filter((item) => item.id !== requestId));
+    setActionNotice(`تم ${status === "مقبول" ? "قبول" : "رفض"} الطلب.`);
+  };
+
+  const saveProfile = async () => {
+    if (!currentUserId) return;
+    setSavingProfile(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: profileForm.fullName,
+        phone: profileForm.phone,
+        city: profileForm.city,
+        main_sector: profileForm.mainSector,
+        project_stage: profileForm.projectStage,
+        national_id_uploaded: personalFiles.nationalId,
+        personal_photo_uploaded: personalFiles.personalPhoto,
+        kyc_complete: isVerificationComplete,
+      })
+      .eq("id", currentUserId);
+
+    setSavingProfile(false);
+
+    if (error) {
+      setActionNotice("تعذر تحديث الملف الشخصي.");
+      return;
+    }
+
+    setActionNotice("تم تحديث الملف الشخصي بنجاح.");
   };
 
   const sendAdvisorMessage = () => {
@@ -165,77 +353,6 @@ export default function EntrepreneurDashboard() {
     ]);
     setAdvisorInput("");
   };
-
-
-  const [requests, setRequests] = useState([
-    {
-      id: 1,
-      investorName: "أحمد العبدالله",
-      badge: "مستثمر معتمد",
-      projectName: "تطبيق التعليم الذكي",
-      message: "يريد الاستثمار في مشروع 'منصة التعليم الذكي'",
-      date: "2024/06/20",
-      time: "10:30",
-    },
-    {
-      id: 2,
-      investorName: "سارة الفقحاني",
-      badge: "مستثمر معتمد",
-      projectName: "منصة الزراعة الذكية",
-      message: "اهتمام في الاستثمار للمشروع",
-      date: "2024/06/19",
-      time: "09:15",
-    },
-    {
-      id: 3,
-      investorName: "محمد القرني",
-      badge: "مستثمر جديد",
-      projectName: "حلول الصحة الرقمية",
-      message: "يود معرفة المزيد عن المشروع",
-      date: "2024/06/18",
-      time: "14:45",
-    },
-  ]);
-
-  useEffect(() => {
-    const incomingRaw = localStorage.getItem("nile_invest_incoming_requests");
-    if (!incomingRaw) return;
-
-    const incoming = JSON.parse(incomingRaw) as {
-      id: number;
-      investorName: string;
-      badge: string;
-      projectName: string;
-      message: string;
-      date: string;
-      time: string;
-    }[];
-
-    if (!incoming.length) return;
-
-    setRequests((prev) => {
-      const prevIds = new Set(prev.map((item) => item.id));
-      const uniqueIncoming = incoming.filter((item) => !prevIds.has(item.id));
-      return [...uniqueIncoming, ...prev];
-    });
-  }, []);
-
-  const removeIncomingRequestFromStorage = (requestId: number) => {
-    const incomingRaw = localStorage.getItem("nile_invest_incoming_requests");
-    if (!incomingRaw) return;
-
-    const incoming = JSON.parse(incomingRaw) as { id: number }[];
-    localStorage.setItem(
-      "nile_invest_incoming_requests",
-      JSON.stringify(incoming.filter((item) => item.id !== requestId)),
-    );
-  };
-
-  const messages = [
-    { id: 1, name: "محمد صلاح", text: "أحتاج مزيد من التفاصيل المالية", time: "10:24" },
-    { id: 2, name: "نجلاء حسن", text: "أرسلت عرض الاستثمار", time: "09:10" },
-    { id: 3, name: "عبدالرحمن آدم", text: "متى يمكننا الاجتماع؟", time: "أمس" },
-  ];
 
   const sidebarItems = useMemo(
     () => [
@@ -258,7 +375,6 @@ export default function EntrepreneurDashboard() {
 
   return (
     <div className="min-h-screen bg-light-gray" dir="rtl">
-      {/* Sidebar */}
       <div className="fixed right-0 top-0 bottom-0 w-64 bg-invest-blue text-white p-6 overflow-y-auto">
         <Link to="/" className="flex items-center gap-2 mb-12">
           <div className="w-10 h-10 bg-invest-teal rounded-lg flex items-center justify-center">
@@ -273,9 +389,7 @@ export default function EntrepreneurDashboard() {
               key={item.key}
               onClick={() => setActiveSection(item.key)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold transition ${
-                activeSection === item.key
-                  ? "bg-invest-teal text-invest-blue"
-                  : "text-white hover:bg-invest-blue/80"
+                activeSection === item.key ? "bg-invest-teal text-invest-blue" : "text-white hover:bg-invest-blue/80"
               }`}
             >
               <span className="text-lg">{item.icon}</span>
@@ -284,22 +398,23 @@ export default function EntrepreneurDashboard() {
           ))}
         </nav>
 
-
-        <Link
-          to="/"
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            navigate("/");
+          }}
           className="w-full flex items-center gap-2 px-4 py-3 text-white hover:bg-invest-blue/80 rounded-lg font-cairo font-semibold transition mt-6"
         >
           <LogOut className="w-5 h-5" />
           <span>تسجيل الخروج</span>
-        </Link>
+        </button>
       </div>
 
-      {/* Main Content */}
       <div className="mr-64 min-h-screen">
         <header className="bg-white border-b border-light-gray sticky top-0 z-40">
           <div className="px-8 h-20 flex items-center justify-between">
             <div>
-              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً بك، أحمد! 👋</h1>
+              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً بك، {profileForm.fullName || "رائد أعمال"}! 👋</h1>
               <p className="font-cairo text-sm text-dark-gray">{sectionTitle[activeSection]}</p>
             </div>
             <div className="flex items-center gap-4">
@@ -315,14 +430,19 @@ export default function EntrepreneurDashboard() {
         </header>
 
         <div className="p-8 space-y-8">
-          {/* Dashboard */}
-          {activeSection === "dashboard" && (
+          {loading && <div className="bg-white rounded-2xl p-6 shadow-lg font-cairo text-dark-gray">جاري تحميل البيانات من قاعدة البيانات...</div>}
+
+          {!!actionNotice && (
+            <div className="font-cairo text-sm bg-invest-teal/10 text-invest-blue border border-invest-teal/30 rounded-lg p-3">{actionNotice}</div>
+          )}
+
+          {!loading && activeSection === "dashboard" && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { icon: Briefcase, label: "عدد مشاريعي", value: "3" },
-                  { icon: Users, label: "طلبات جديدة", value: "2" },
-                  { icon: MessageCircle, label: "رسائل جديدة", value: "5" },
+                  { icon: Briefcase, label: "عدد مشاريعي", value: String(projects.length) },
+                  { icon: Users, label: "طلبات جديدة", value: String(requests.length) },
+                  { icon: MessageCircle, label: "رسائل جديدة", value: "0" },
                   { icon: Heart, label: "نسبة التحقق", value: `${verificationPercent}%`, verification: true },
                 ].map((stat, idx) => {
                   const Icon = stat.icon;
@@ -344,7 +464,7 @@ export default function EntrepreneurDashboard() {
 
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h2 className="font-cairo font-bold text-2xl mb-4">ملخص سريع</h2>
-                <p className="font-cairo text-dark-gray">لديك 2 طلبات استثمار جديدة و 5 رسائل غير مقروءة.</p>
+                <p className="font-cairo text-dark-gray">لديك {requests.length} طلبات استثمار جديدة.</p>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-light-gray">
@@ -399,37 +519,6 @@ export default function EntrepreneurDashboard() {
                   ))}
                 </div>
 
-                {advisorMode === "pitch" && (
-                  <div className="rounded-xl border border-light-gray p-4 bg-light-gray/40">
-                    <p className="font-cairo text-sm font-bold text-text-dark mb-2">اقتراح سريع لعرضك التمويلي</p>
-                    <p className="font-cairo text-sm text-dark-gray leading-7">
-                      ركّز على: المشكلة في السوق السوداني، حجم الطلب المحلي، وكيف سيزيد التمويل من عدد العملاء خلال 6 أشهر.
-                      أضف رقمين واضحين: تكلفة اكتساب العميل ومتوسط الإيراد الشهري.
-                    </p>
-                  </div>
-                )}
-
-                {advisorMode === "financial" && (
-                  <div className="rounded-xl border border-light-gray p-4 bg-light-gray/40">
-                    <p className="font-cairo text-sm font-bold text-text-dark mb-2">خطة مالية مقترحة</p>
-                    <ul className="space-y-2 font-cairo text-sm text-dark-gray list-disc pr-5">
-                      <li>40% لتطوير المنتج وتحسين التجربة.</li>
-                      <li>35% للتسويق والمبيعات في الخرطوم والولايات الرئيسية.</li>
-                      <li>25% للتشغيل وبناء فريق أساسي لمدة 8 أشهر.</li>
-                    </ul>
-                  </div>
-                )}
-
-                {advisorMode === "requests" && (
-                  <div className="rounded-xl border border-light-gray p-4 bg-light-gray/40">
-                    <p className="font-cairo text-sm font-bold text-text-dark mb-2">رد مقترح على المستثمرين</p>
-                    <p className="font-cairo text-sm text-dark-gray leading-7">
-                      شكرًا لاهتمامكم. أرفقنا تحديثًا بالمؤشرات الحالية، ونقترح اجتماعًا قصيرًا لعرض خطة النمو المتوقعة
-                      ونموذج العائد خلال الربعين القادمين.
-                    </p>
-                  </div>
-                )}
-
                 <div className="mt-4 rounded-xl border border-light-gray overflow-hidden">
                   <div className="bg-light-gray/60 px-4 py-3 border-b border-light-gray">
                     <p className="font-cairo text-sm font-bold text-text-dark">الدردشة مع المستشار الذكي</p>
@@ -440,9 +529,7 @@ export default function EntrepreneurDashboard() {
                       <div key={msg.id} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
                         <div
                           className={`max-w-[85%] rounded-xl px-4 py-2.5 font-cairo text-sm leading-7 ${
-                            msg.role === "assistant"
-                              ? "bg-light-gray text-text-dark"
-                              : "bg-invest-blue text-white"
+                            msg.role === "assistant" ? "bg-light-gray text-text-dark" : "bg-invest-blue text-white"
                           }`}
                         >
                           {msg.text}
@@ -452,10 +539,7 @@ export default function EntrepreneurDashboard() {
                   </div>
 
                   <div className="p-3 border-t border-light-gray bg-white flex gap-2">
-                    <button
-                      onClick={sendAdvisorMessage}
-                      className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm font-bold hover:bg-emerald-600 transition"
-                    >
+                    <button onClick={sendAdvisorMessage} className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm font-bold hover:bg-emerald-600 transition">
                       إرسال
                     </button>
                     <input
@@ -471,8 +555,7 @@ export default function EntrepreneurDashboard() {
             </>
           )}
 
-          {/* Projects */}
-          {activeSection === "projects" && (
+          {!loading && activeSection === "projects" && (
             <div className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
               <h2 className="font-cairo font-bold text-2xl">إضافة مشروع جديد</h2>
 
@@ -530,33 +613,31 @@ export default function EntrepreneurDashboard() {
               <div className="space-y-4">
                 {projects.map((project) => (
                   <div key={project.id} className="p-4 border border-light-gray rounded-xl flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg ${project.image}`}></div>
-                      <div>
-                        <p className="font-cairo font-semibold">{project.name}</p>
-                        <p className="font-cairo text-xs text-dark-gray">{project.date}</p>
-                        <p className="font-cairo text-xs text-dark-gray mt-1">المجال: {project.sector}</p>
-                        <p className="font-cairo text-xs text-dark-gray">الميزانية المطلوبة: {project.budget} ج.س</p>
-                        <p className="font-cairo text-xs text-dark-gray">المدة: {project.duration}</p>
-                        <p className="font-cairo text-xs text-dark-gray mt-1 max-w-xl">{project.description}</p>
-                      </div>
+                    <div>
+                      <p className="font-cairo font-semibold">{project.name}</p>
+                      <p className="font-cairo text-xs text-dark-gray">{project.date}</p>
+                      <p className="font-cairo text-xs text-dark-gray mt-1">المجال: {project.sector}</p>
+                      <p className="font-cairo text-xs text-dark-gray">الميزانية المطلوبة: {project.budget} ج.س</p>
+                      <p className="font-cairo text-xs text-dark-gray">المدة: {project.duration}</p>
+                      <p className="font-cairo text-xs text-dark-gray mt-1 max-w-xl">{project.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-1 text-white text-xs rounded ${project.statusColor}`}>{project.status}</span>
-                      <button className="p-2 text-invest-blue"><Edit2 className="w-4 h-4" /></button>
-                      <button
-                        onClick={() => setProjects((prev) => prev.filter((item) => item.id !== project.id))}
-                        className="p-2 text-invest-red"
-                      ><Trash2 className="w-4 h-4" /></button>
+                      <button className="p-2 text-invest-blue">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteProject(project.id)} className="p-2 text-invest-red">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
+                {projects.length === 0 && <p className="font-cairo text-dark-gray">لا توجد مشاريع بعد.</p>}
               </div>
             </div>
           )}
 
-          {/* Requests */}
-          {activeSection === "requests" && (
+          {!loading && activeSection === "requests" && (
             <div className="bg-white rounded-2xl p-8 shadow-lg">
               <h2 className="font-cairo font-bold text-2xl mb-6">طلبات المستثمرين</h2>
               <div className="space-y-4">
@@ -564,33 +645,33 @@ export default function EntrepreneurDashboard() {
                   <div key={request.id} className="border border-light-gray rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-cairo font-semibold">{request.investorName}</p>
-                      <p className="font-cairo text-xs text-dark-gray">{request.date} - {request.time}</p>
+                      <p className="font-cairo text-xs text-dark-gray">
+                        {request.date} - {request.time}
+                      </p>
                     </div>
                     <p className="font-cairo text-sm text-dark-gray mb-3">{request.message}</p>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          setRequests((prev) => prev.filter((item) => item.id !== request.id));
-                          removeIncomingRequestFromStorage(request.id);
-                        }}
+                        onClick={() => handleRequestDecision(request.id, "مقبول")}
                         className="px-4 py-2 bg-invest-green text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
-                      ><CheckCircle className="w-4 h-4" /> قبول</button>
+                      >
+                        <CheckCircle className="w-4 h-4" /> قبول
+                      </button>
                       <button
-                        onClick={() => {
-                          setRequests((prev) => prev.filter((item) => item.id !== request.id));
-                          removeIncomingRequestFromStorage(request.id);
-                        }}
+                        onClick={() => handleRequestDecision(request.id, "مرفوض")}
                         className="px-4 py-2 bg-invest-red text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
-                      ><XCircle className="w-4 h-4" /> رفض</button>
+                      >
+                        <XCircle className="w-4 h-4" /> رفض
+                      </button>
                     </div>
                   </div>
                 ))}
+                {requests.length === 0 && <p className="font-cairo text-dark-gray">لا توجد طلبات واردة حالياً.</p>}
               </div>
             </div>
           )}
 
-          {/* Messages */}
-          {activeSection === "messages" && (
+          {!loading && activeSection === "messages" && (
             <div className="bg-white rounded-2xl p-8 shadow-lg">
               <h2 className="font-cairo font-bold text-2xl mb-6">الرسائل</h2>
               <div className="space-y-3">
@@ -607,8 +688,7 @@ export default function EntrepreneurDashboard() {
             </div>
           )}
 
-          {/* Profile */}
-          {activeSection === "profile" && (
+          {!loading && activeSection === "profile" && (
             <div className="bg-white rounded-2xl p-8 shadow-lg space-y-5">
               <h2 className="font-cairo font-bold text-2xl">الملف الشخصي</h2>
 
@@ -644,9 +724,7 @@ export default function EntrepreneurDashboard() {
                     <button
                       onClick={() => setPersonalFiles((prev) => ({ ...prev, [file.key]: !prev[file.key] }))}
                       className={`px-3 py-1.5 rounded-lg font-cairo text-xs font-bold transition ${
-                        personalFiles[file.key]
-                          ? "bg-invest-green text-white"
-                          : "bg-invest-blue text-white hover:bg-blue-900"
+                        personalFiles[file.key] ? "bg-invest-green text-white" : "bg-invest-blue text-white hover:bg-blue-900"
                       }`}
                     >
                       {personalFiles[file.key] ? "تم الرفع" : "رفع الملف"}
@@ -656,39 +734,46 @@ export default function EntrepreneurDashboard() {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">الاسم الكامل</p>
-                  <p className="font-cairo font-bold">زين خلف الله</p>
-                </div>
-                <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">البريد الإلكتروني</p>
-                  <p className="font-cairo font-bold">zain.founder@nileinvest.ai</p>
-                </div>
-                <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">رقم الهاتف</p>
-                  <p className="font-cairo font-bold">+249 92 345 6789</p>
-                </div>
-                <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">المدينة</p>
-                  <p className="font-cairo font-bold">الخرطوم - السودان</p>
-                </div>
-                <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">القطاع الرئيسي</p>
-                  <p className="font-cairo font-bold">التعليم التقني</p>
-                </div>
-                <div className="p-4 border rounded-xl border-light-gray">
-                  <p className="font-cairo text-sm text-dark-gray">مرحلة المشروع</p>
-                  <p className="font-cairo font-bold">نمو / توسع</p>
-                </div>
+                <input
+                  className="p-4 border rounded-xl border-light-gray font-cairo"
+                  value={profileForm.fullName}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="الاسم الكامل"
+                />
+                <input className="p-4 border rounded-xl border-light-gray font-cairo bg-light-gray" value={profileForm.email} readOnly />
+                <input
+                  className="p-4 border rounded-xl border-light-gray font-cairo"
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))}
+                  placeholder="رقم الهاتف"
+                />
+                <input
+                  className="p-4 border rounded-xl border-light-gray font-cairo"
+                  value={profileForm.city}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, city: e.target.value }))}
+                  placeholder="المدينة"
+                />
+                <input
+                  className="p-4 border rounded-xl border-light-gray font-cairo"
+                  value={profileForm.mainSector}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, mainSector: e.target.value }))}
+                  placeholder="القطاع الرئيسي"
+                />
+                <input
+                  className="p-4 border rounded-xl border-light-gray font-cairo"
+                  value={profileForm.projectStage}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, projectStage: e.target.value }))}
+                  placeholder="مرحلة المشروع"
+                />
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo text-sm">استقبال تنبيهات المستثمرين الجدد</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
-                  تحديث الملف الشخصي
+                <button
+                  onClick={saveProfile}
+                  disabled={savingProfile}
+                  className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition disabled:opacity-60"
+                >
+                  {savingProfile ? "جاري التحديث..." : "تحديث الملف الشخصي"}
                 </button>
               </div>
 
@@ -699,13 +784,10 @@ export default function EntrepreneurDashboard() {
                   <input type="password" placeholder="كلمة المرور الجديدة" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal" />
                   <input type="password" placeholder="تأكيد كلمة المرور" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal" />
                 </div>
-                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
-                  تحديث كلمة المرور
-                </button>
+                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">تحديث كلمة المرور</button>
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>
