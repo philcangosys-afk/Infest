@@ -8,14 +8,13 @@ import {
   Search,
   User,
   MessageCircle,
-  Settings,
   Bot,
   Wand2,
   Trash2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile" | "settings";
+type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile";
 
 type Project = {
   id: number;
@@ -134,7 +133,6 @@ export default function InvestorDashboard() {
       { key: "requests" as const, label: "طلباتي", icon: "📋" },
       { key: "messages" as const, label: "الرسائل", icon: "💬" },
       { key: "profile" as const, label: "الملف الشخصي", icon: "👤" },
-      { key: "settings" as const, label: "الإعدادات", icon: "⚙️" },
     ],
     [],
   );
@@ -146,7 +144,6 @@ export default function InvestorDashboard() {
     requests: "طلبات الاستثمار",
     messages: "محادثاتك",
     profile: "بيانات المستثمر",
-    settings: "إعدادات الحساب",
   };
 
   return (
@@ -482,23 +479,6 @@ export default function InvestorDashboard() {
                 </div>
                 <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold">تحديث كلمة المرور</button>
               </div>
-            </div>
-          )}
-
-          {activeSection === "settings" && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <Settings className="w-5 h-5 text-invest-teal" />
-                <h2 className="font-cairo font-bold text-xl">الإعدادات</h2>
-              </div>
-              <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                <span className="font-cairo">إشعارات فرص جديدة</span>
-                <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-              </label>
-              <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                <span className="font-cairo">تفعيل تنبيهات انخفاض المخاطر</span>
-                <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-              </label>
             </div>
           )}
 

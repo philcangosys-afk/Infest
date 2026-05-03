@@ -11,7 +11,6 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  Settings,
   User,
   FolderOpen,
   Bot,
@@ -25,8 +24,7 @@ type SectionKey =
   | "projects"
   | "requests"
   | "messages"
-  | "profile"
-  | "settings";
+  | "profile";
 
 type EntrepreneurProject = {
   id: number;
@@ -246,7 +244,6 @@ export default function EntrepreneurDashboard() {
       { key: "requests" as const, icon: "📬", label: "الطلبات الواردة" },
       { key: "messages" as const, icon: "💬", label: "الرسائل" },
       { key: "profile" as const, icon: "👤", label: "الملف الشخصي" },
-      { key: "settings" as const, icon: "⚙️", label: "الإعدادات" },
     ],
     [],
   );
@@ -257,7 +254,6 @@ export default function EntrepreneurDashboard() {
     requests: "الطلبات الواردة",
     messages: "الرسائل",
     profile: "الملف الشخصي",
-    settings: "الإعدادات",
   };
 
   return (
@@ -707,33 +703,6 @@ export default function EntrepreneurDashboard() {
                   تحديث كلمة المرور
                 </button>
               </div>
-            </div>
-          )}
-
-          {/* Settings */}
-          {activeSection === "settings" && (
-            <div className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
-              <h2 className="font-cairo font-bold text-2xl">الإعدادات</h2>
-
-              <div className="space-y-3">
-                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                  <p className="font-cairo">تفعيل إشعارات المشاريع الجديدة</p>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </div>
-                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                  <p className="font-cairo">إظهار الملف للمستثمرين</p>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </div>
-                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                  <p className="font-cairo">استقبال طلبات الاستثمار تلقائياً</p>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </div>
-                <div className="p-4 border border-light-gray rounded-xl flex items-center justify-between">
-                  <p className="font-cairo">إرسال تقارير الأداء الأسبوعية</p>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </div>
-              </div>
-
             </div>
           )}
 
