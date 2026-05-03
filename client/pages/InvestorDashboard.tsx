@@ -1,56 +1,85 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, Bell, Eye, Heart, Send, Briefcase, Search, User, MessageCircle, Settings, Bot, Wand2, Calculator } from "lucide-react";
+import {
+  TrendingUp,
+  Bell,
+  Heart,
+  Send,
+  Briefcase,
+  Search,
+  User,
+  MessageCircle,
+  Settings,
+  Bot,
+  Wand2,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile" | "settings";
 
+type Project = {
+  id: number;
+  name: string;
+  amount: string;
+  sector: string;
+  stage: string;
+  description: string;
+  matching: string;
+};
+
 export default function InvestorDashboard() {
   const [activeSection, setActiveSection] = useState<InvestorSection>("dashboard");
-  const [advisorTask, setAdvisorTask] = useState<"feasibility" | "compare" | "returns">("feasibility");
-  const [advisorInput, setAdvisorInput] = useState("");
-  const [selectedAdvisorProject, setSelectedAdvisorProject] = useState("منصة التعليم الذكي");
-  const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
-    {
-      id: 1,
-      role: "assistant",
-      text: "مرحبًا، أنا مستشار المستثمر الذكي. اكتب أي مشروع وسأقدم لك تحليلًا سريعًا للجدوى والعائد.",
-    },
-  ]);
-
-  const sendAdvisorMessage = () => {
-    const message = advisorInput.trim();
-    if (!message) return;
-
-    const modeReply =
-      advisorTask === "feasibility"
-        ? `تحليل الجدوى لمشروع ${selectedAdvisorProject}: ابدأ بمراجعة التدفق النقدي المتوقع، نسبة الإشغال/المبيعات، ومخاطر السوق قبل اتخاذ القرار.`
-        : advisorTask === "compare"
-          ? `المقارنة لمشروع ${selectedAdvisorProject}: قارن بين معدل النمو، فترة الاسترداد، وخبرة الفريق التشغيلي لتحديد الخيار الأكثر توازنًا.`
-          : `تقدير العائد لمشروع ${selectedAdvisorProject}: أدخل مبلغ الاستثمار والعائد السنوي المتوقع لأحسب لك صافي العائد بصورة مبسطة.`;
-
-    setAdvisorChat((prev) => [
-      ...prev,
-      { id: prev.length + 1, role: "user", text: message },
-      { id: prev.length + 2, role: "assistant", text: modeReply },
-    ]);
-    setAdvisorInput("");
-  };
-
-  const suggestedProjects = [
-    { id: 1, name: "منصة التعليم الذكي", founder: "زين خلف الله", amount: "2,500,000 ج.س", rating: 4.8 },
-    { id: 2, name: "نمو الزراعة", founder: "سارة نور", amount: "1,800,000 ج.س", rating: 4.6 },
-    { id: 3, name: "سلسلة الإمداد الذكية", founder: "خالد عثمان", amount: "3,500,000 ج.س", rating: 4.7 },
-  ];
-
-  const favorites = [
-    { id: 1, project: "فكرة AI للرعاية", stage: "Prototype", savedAt: "2024/05/12" },
-    { id: 2, project: "صحة الآن", stage: "Startup", savedAt: "2024/05/10" },
-  ];
-
-  const myRequests = [
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSector, setSelectedSector] = useState("الكل");
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([1, 2]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [myRequests, setMyRequests] = useState([
     { id: 1, project: "منصة التعليم الذكي", status: "قيد المراجعة", date: "2024/05/20" },
     { id: 2, project: "نمو الزراعة", status: "تم الرد", date: "2024/05/18" },
+  ]);
+
+  const [kycComplete, setKycComplete] = useState(false);
+  const [profileDataComplete, setProfileDataComplete] = useState(true);
+  const isVerified = kycComplete && profileDataComplete;
+  const profileCompletion = (kycComplete ? 50 : 0) + (profileDataComplete ? 50 : 0);
+
+  const projects: Project[] = [
+    {
+      id: 1,
+      name: "منصة التعليم الذكي",
+      amount: "2,500,000 ج.س",
+      sector: "التعليم",
+      stage: "Startup",
+      description: "منصة تعليمية تفاعلية باستخدام الذكاء الاصطناعي لرفع أداء الطلاب.",
+      matching: "92%",
+    },
+    {
+      id: 2,
+      name: "نمو الزراعة",
+      amount: "1,800,000 ج.س",
+      sector: "الزراعة",
+      stage: "Growth",
+      description: "حل متكامل لمتابعة الإنتاج الزراعي وسلاسل التوريد.",
+      matching: "88%",
+    },
+    {
+      id: 3,
+      name: "سلسلة الإمداد الذكية",
+      amount: "3,500,000 ج.س",
+      sector: "اللوجستيات",
+      stage: "Scale",
+      description: "نظام رقمي لإدارة النقل والتوزيع مع تحليل التكاليف.",
+      matching: "84%",
+    },
   ];
+
+  const filteredProjects = projects.filter((project) => {
+    const queryMatch = project.name.includes(searchQuery) || project.description.includes(searchQuery);
+    const sectorMatch = selectedSector === "الكل" || project.sector === selectedSector;
+    return queryMatch && sectorMatch;
+  });
+
+  const favoriteProjects = projects.filter((project) => favoriteIds.includes(project.id));
 
   const nav = useMemo(
     () => [
@@ -67,7 +96,7 @@ export default function InvestorDashboard() {
 
   const titles: Record<InvestorSection, string> = {
     dashboard: "ملخص المستثمر",
-    available: "استكشف المشاريع المتاحة",
+    available: "المشاريع المتاحة",
     favorites: "المشاريع المحفوظة",
     requests: "طلبات الاستثمار",
     messages: "محادثاتك",
@@ -91,9 +120,7 @@ export default function InvestorDashboard() {
               key={item.key}
               onClick={() => setActiveSection(item.key)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold transition ${
-                activeSection === item.key
-                  ? "bg-invest-teal text-invest-blue"
-                  : "text-white hover:bg-invest-blue/80"
+                activeSection === item.key ? "bg-invest-teal text-invest-blue" : "text-white hover:bg-invest-blue/80"
               }`}
             >
               <span>{item.icon}</span>
@@ -101,13 +128,6 @@ export default function InvestorDashboard() {
             </button>
           ))}
         </nav>
-
-        <Link
-          to="/browse-projects"
-          className="mt-10 block w-full px-4 py-3 border border-invest-teal/40 rounded-lg text-center font-cairo font-semibold text-invest-teal hover:bg-invest-teal/10 transition"
-        >
-          العودة لتصفح المشاريع
-        </Link>
       </aside>
 
       <main className="mr-64 min-h-screen">
@@ -122,7 +142,9 @@ export default function InvestorDashboard() {
                 <Bell className="w-6 h-6 text-dark-gray" />
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-invest-red"></span>
               </button>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-invest-blue to-invest-teal text-white font-cairo font-bold flex items-center justify-center">م</div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-invest-blue to-invest-teal text-white font-cairo font-bold flex items-center justify-center">
+                م
+              </div>
             </div>
           </div>
         </header>
@@ -132,10 +154,10 @@ export default function InvestorDashboard() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { icon: Eye, label: "مشاريع متصفحة", value: "24" },
-                  { icon: Heart, label: "اهتمامات محفوظة", value: "8" },
-                  { icon: Send, label: "طلبات مرسلة", value: "5" },
-                  { icon: Briefcase, label: "صفقات منجزة", value: "2" },
+                  { icon: Heart, label: "اهتمامات محفوظة", value: String(favoriteIds.length) },
+                  { icon: Send, label: "طلبات مرسلة", value: String(myRequests.length) },
+                  { icon: Briefcase, label: "مطابقات", value: "12" },
+                  { icon: Search, label: "صفقات منجزة", value: "2" },
                 ].map((card, i) => {
                   const Icon = card.icon;
                   return (
@@ -151,11 +173,11 @@ export default function InvestorDashboard() {
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h2 className="font-cairo font-bold text-xl mb-4">مشاريع مقترحة لك</h2>
                 <div className="grid md:grid-cols-3 gap-4">
-                  {suggestedProjects.map((p) => (
+                  {projects.map((p) => (
                     <div key={p.id} className="border border-light-gray rounded-xl p-4">
                       <p className="font-cairo font-bold">{p.name}</p>
-                      <p className="font-cairo text-sm text-dark-gray">رائد الأعمال: {p.founder}</p>
-                      <p className="font-cairo text-sm text-invest-teal mt-1">{p.amount}</p>
+                      <p className="font-cairo text-sm text-dark-gray">{p.amount}</p>
+                      <p className="font-cairo text-xs text-invest-teal mt-1">Matching: {p.matching}</p>
                     </div>
                   ))}
                 </div>
@@ -168,135 +190,109 @@ export default function InvestorDashboard() {
                       <Bot className="w-5 h-5 text-invest-blue" />
                     </div>
                     <div>
-                      <h2 className="font-cairo font-bold text-xl text-text-dark">مستشار المستثمر الذكي</h2>
-                      <p className="font-cairo text-xs text-dark-gray">تحليل سريع للجدوى والعائد قبل اتخاذ قرار الاستثمار</p>
+                      <h2 className="font-cairo font-bold text-xl text-text-dark">خدمات المستشار الذكي</h2>
+                      <p className="font-cairo text-xs text-dark-gray">اختر الخدمة المناسبة بدلاً من الدردشة الفورية</p>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-invest-teal/10 text-invest-teal font-cairo text-xs font-bold">
                     <Wand2 className="w-3.5 h-3.5" />
-                    AI Assistant
+                    Services
                   </span>
                 </div>
 
-                <div className="mb-4">
-                  <label className="font-cairo text-xs text-dark-gray mb-2 block">اختر المشروع الذي تريد مناقشته مع المستشار</label>
-                  <select
-                    value={selectedAdvisorProject}
-                    onChange={(e) => setSelectedAdvisorProject(e.target.value)}
-                    className="w-full md:w-80 border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white"
-                  >
-                    {suggestedProjects.map((project) => (
-                      <option key={project.id} value={project.name}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-2 mb-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { key: "feasibility", label: "تحليل الجدوى" },
-                    { key: "compare", label: "قارن المشاريع" },
-                    { key: "returns", label: "احسب العائد" },
-                  ].map((action) => (
-                    <button
-                      key={action.key}
-                      onClick={() => setAdvisorTask(action.key as "feasibility" | "compare" | "returns")}
-                      className={`px-4 py-2.5 rounded-xl border font-cairo text-sm font-semibold transition ${
-                        advisorTask === action.key
-                          ? "bg-invest-teal text-white border-invest-teal"
-                          : "bg-white text-dark-gray border-light-gray hover:border-invest-blue hover:text-invest-blue"
-                      }`}
-                    >
-                      {action.label}
+                    "تحليل جدوى مشروع",
+                    "خدمة Matching بين المستثمر والمشروع",
+                    "تقييم مخاطر الاستثمار",
+                    "حساب العائد المتوقع",
+                  ].map((service) => (
+                    <button key={service} className="border border-light-gray rounded-xl p-4 text-right hover:border-invest-teal hover:bg-light-gray transition">
+                      <p className="font-cairo font-semibold text-sm text-text-dark">{service}</p>
+                      <p className="font-cairo text-xs text-dark-gray mt-1">خدمة مدفوعة</p>
                     </button>
                   ))}
                 </div>
 
-                <div className="space-y-3">
-                  <div className="p-4 rounded-xl bg-light-gray/50 border border-light-gray max-w-2xl">
-                    <p className="font-cairo text-sm text-dark-gray">
-                      {`أرغب في تقييم مشروع ${selectedAdvisorProject}، هل يمكنك تحليل الجدوى الاستثمارية؟`}
-                    </p>
-                  </div>
-
-                  {advisorTask === "feasibility" && (
-                    <div className="p-4 rounded-xl bg-invest-blue text-white max-w-3xl mr-auto">
-                      <p className="font-cairo text-sm leading-7">
-                        بناءً على البيانات المدخلة: العائد المتوقع على الاستثمار (ROI) حوالي 16-18% سنويًا،
-                        وفترة الاسترداد التقديرية 5.5 سنوات مع مستوى مخاطرة متوسط.
-                      </p>
-                    </div>
-                  )}
-
-                  {advisorTask === "compare" && (
-                    <div className="p-4 rounded-xl bg-invest-blue text-white max-w-3xl mr-auto">
-                      <p className="font-cairo text-sm leading-7">
-                        مقارنة سريعة: مشروع التعليم الذكي يحقق نموًا أسرع للمستخدمين، بينما مشروع الزراعة يقدم
-                        استقرارًا أعلى في التدفق النقدي. التنويع بينهما يقلل المخاطر الإجمالية.
-                      </p>
-                    </div>
-                  )}
-
-                  {advisorTask === "returns" && (
-                    <div className="p-4 rounded-xl bg-invest-blue text-white max-w-3xl mr-auto">
-                      <p className="font-cairo text-sm leading-7">
-                        <span className="inline-flex items-center gap-1 ml-1 font-bold"><Calculator className="w-4 h-4" />تقدير العائد:</span>
-                        عند استثمار 2,000,000 ج.س بعائد سنوي 17%، العائد السنوي المتوقع ≈ 340,000 ج.س قبل الرسوم.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-4 rounded-xl border border-light-gray overflow-hidden">
-                  <div className="bg-light-gray/60 px-4 py-3 border-b border-light-gray">
-                    <p className="font-cairo text-sm font-bold text-text-dark">الدردشة مع مستشار المستثمر</p>
-                  </div>
-
-                  <div className="p-4 space-y-3 max-h-64 overflow-y-auto bg-white">
-                    {advisorChat.map((msg) => (
-                      <div key={msg.id} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
-                        <div
-                          className={`max-w-[85%] rounded-xl px-4 py-2.5 font-cairo text-sm leading-7 ${
-                            msg.role === "assistant"
-                              ? "bg-light-gray text-text-dark"
-                              : "bg-invest-blue text-white"
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 border-t border-light-gray bg-white flex gap-2">
-                    <button
-                      onClick={sendAdvisorMessage}
-                      className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm font-bold hover:bg-emerald-600 transition"
-                    >
-                      إرسال
-                    </button>
-                    <input
-                      value={advisorInput}
-                      onChange={(e) => setAdvisorInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && sendAdvisorMessage()}
-                      placeholder="اكتب سؤالك لمستشار المستثمر..."
-                      className="flex-1 border border-light-gray rounded-lg px-4 py-2 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                    />
-                  </div>
+                <div className="mt-4 p-4 rounded-xl bg-invest-blue text-white flex items-center justify-between gap-3 flex-wrap">
+                  <p className="font-cairo text-sm">خدمة إرشاد استثماري مدفوع مع مستشار خبير لمدة 45 دقيقة.</p>
+                  <button className="px-4 py-2 rounded-lg bg-white text-invest-blue font-cairo font-bold text-sm">
+                    حجز جلسة Mentoring
+                  </button>
                 </div>
               </div>
             </>
           )}
 
           {activeSection === "available" && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bg-white rounded-2xl p-6 shadow-lg space-y-4">
+              <div className="flex items-center gap-2 mb-2">
                 <Search className="w-5 h-5 text-dark-gray" />
-                <h2 className="font-cairo font-bold text-xl">المشاريع المتاحة للاستثمار</h2>
+                <h2 className="font-cairo font-bold text-xl">المشاريع المتاحة</h2>
               </div>
-              <p className="font-cairo text-dark-gray mb-4">يمكنك استعراض المشاريع بالتفصيل من صفحة التصفح.</p>
-              <Link to="/browse-projects" className="inline-block px-5 py-2.5 bg-invest-teal text-white rounded-lg font-cairo font-semibold">فتح صفحة التصفح</Link>
+
+              <div className="grid md:grid-cols-3 gap-3">
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="بحث عن مشروع"
+                  className="md:col-span-2 border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                />
+                <select
+                  value={selectedSector}
+                  onChange={(e) => setSelectedSector(e.target.value)}
+                  className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white"
+                >
+                  <option value="الكل">كل المجالات</option>
+                  <option value="التعليم">التعليم</option>
+                  <option value="الزراعة">الزراعة</option>
+                  <option value="اللوجستيات">اللوجستيات</option>
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                {filteredProjects.map((project) => {
+                  const isFav = favoriteIds.includes(project.id);
+                  return (
+                    <div key={project.id} className="border border-light-gray rounded-xl p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-cairo font-bold">{project.name}</p>
+                          <p className="font-cairo text-xs text-dark-gray">{project.sector} • {project.stage}</p>
+                          <p className="font-cairo text-xs text-invest-teal mt-1">Matching: {project.matching}</p>
+                        </div>
+                        <button
+                          onClick={() => setFavoriteIds((prev) => (isFav ? prev.filter((id) => id !== project.id) : [...prev, project.id]))}
+                          className={`p-2 rounded-lg border ${isFav ? "text-invest-red border-invest-red/30" : "text-dark-gray border-light-gray"}`}
+                        >
+                          <Heart className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-3">
+                        <p className="font-cairo text-sm text-dark-gray">{project.amount}</p>
+                        <button
+                          onClick={() => setSelectedProject(project)}
+                          disabled={!isVerified}
+                          className={`px-4 py-2 rounded-lg font-cairo text-sm ${
+                            isVerified
+                              ? "bg-invest-blue text-white hover:bg-blue-900"
+                              : "bg-light-gray text-dark-gray cursor-not-allowed"
+                          }`}
+                        >
+                          عرض التفاصيل
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {!isVerified && (
+                <p className="font-cairo text-sm text-invest-red bg-invest-red/10 border border-invest-red/20 rounded-lg p-3">
+                  عرض التفاصيل متاح فقط للمستخدمين الموثقين.
+                </p>
+              )}
             </div>
           )}
 
@@ -304,13 +300,22 @@ export default function InvestorDashboard() {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <h2 className="font-cairo font-bold text-xl mb-4">اهتماماتي</h2>
               <div className="space-y-3">
-                {favorites.map((f) => (
-                  <div key={f.id} className="border border-light-gray rounded-xl p-4 flex items-center justify-between">
+                {favoriteProjects.map((project) => (
+                  <div key={project.id} className="border border-light-gray rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-cairo font-semibold">{f.project}</p>
-                      <p className="font-cairo text-xs text-dark-gray">{f.stage} • {f.savedAt}</p>
+                      <p className="font-cairo font-semibold">{project.name}</p>
+                      <p className="font-cairo text-xs text-dark-gray">{project.stage} • {project.sector}</p>
                     </div>
-                    <button className="px-4 py-2 border border-invest-teal text-invest-teal rounded-lg font-cairo text-sm">عرض</button>
+                    <button
+                      onClick={() => isVerified && setSelectedProject(project)}
+                      className={`px-4 py-2 rounded-lg font-cairo text-sm ${
+                        isVerified
+                          ? "border border-invest-teal text-invest-teal"
+                          : "border border-light-gray text-dark-gray cursor-not-allowed"
+                      }`}
+                    >
+                      عرض
+                    </button>
                   </div>
                 ))}
               </div>
@@ -321,13 +326,22 @@ export default function InvestorDashboard() {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <h2 className="font-cairo font-bold text-xl mb-4">طلباتي</h2>
               <div className="space-y-3">
-                {myRequests.map((r) => (
-                  <div key={r.id} className="border border-light-gray rounded-xl p-4 flex items-center justify-between">
+                {myRequests.map((request) => (
+                  <div key={request.id} className="border border-light-gray rounded-xl p-4 flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-cairo font-semibold">{r.project}</p>
-                      <p className="font-cairo text-xs text-dark-gray">{r.date}</p>
+                      <p className="font-cairo font-semibold">{request.project}</p>
+                      <p className="font-cairo text-xs text-dark-gray">{request.date}</p>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-cairo bg-light-gray text-text-dark">{r.status}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-cairo bg-light-gray text-text-dark">{request.status}</span>
+                      <button
+                        onClick={() => setMyRequests((prev) => prev.filter((item) => item.id !== request.id))}
+                        className="p-2 rounded-lg text-invest-red hover:bg-invest-red/10"
+                        aria-label="حذف الطلب"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -340,7 +354,13 @@ export default function InvestorDashboard() {
                 <MessageCircle className="w-5 h-5 text-invest-teal" />
                 <h2 className="font-cairo font-bold text-xl">الرسائل</h2>
               </div>
-              <p className="font-cairo text-dark-gray">لا توجد رسائل جديدة حالياً. يمكنك التواصل مع رواد الأعمال من صفحة المشروع.</p>
+              {isVerified ? (
+                <p className="font-cairo text-dark-gray">لا توجد رسائل جديدة حالياً.</p>
+              ) : (
+                <p className="font-cairo text-invest-red bg-invest-red/10 border border-invest-red/20 rounded-lg p-3">
+                  الرسائل غير متاحة قبل التوثيق.
+                </p>
+              )}
             </div>
           )}
 
@@ -354,102 +374,85 @@ export default function InvestorDashboard() {
               <div className="p-4 border border-light-gray rounded-xl bg-light-gray/40">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-cairo text-sm font-semibold text-text-dark">اكتمال الملف الشخصي</p>
-                  <p className="font-cairo text-sm font-bold text-invest-teal">88%</p>
+                  <p className="font-cairo text-sm font-bold text-invest-teal">{profileCompletion}%</p>
                 </div>
                 <div className="h-2.5 rounded-full bg-white overflow-hidden">
-                  <div className="h-full w-[88%] bg-gradient-to-l from-invest-blue to-invest-teal rounded-full"></div>
+                  <div className="h-full bg-gradient-to-l from-invest-blue to-invest-teal rounded-full" style={{ width: `${profileCompletion}%` }}></div>
                 </div>
-                <p className="font-cairo text-xs text-dark-gray mt-2">أضف وثيقة إثبات الدخل لإكمال الملف 100%</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-blue/10 text-invest-blue">KYC: {kycComplete ? "50%" : "0%"}</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-teal/10 text-invest-teal">بيانات أخرى: {profileDataComplete ? "50%" : "0%"}</span>
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">الاسم الكامل</p>
-                  <p className="font-cairo font-semibold">زين العابدين</p>
-                </div>
-                <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">البريد الإلكتروني</p>
-                  <p className="font-cairo font-semibold">zain.investor@nileinvest.ai</p>
-                </div>
-                <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">رقم الهاتف</p>
-                  <p className="font-cairo font-semibold">+249 91 234 5678</p>
-                </div>
-                <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">المدينة</p>
-                  <p className="font-cairo font-semibold">الخرطوم - السودان</p>
-                </div>
-                <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">نوع المستثمر</p>
-                  <p className="font-cairo font-semibold">مستثمر فردي</p>
-                </div>
-                <div className="border border-light-gray rounded-xl p-4">
-                  <p className="font-cairo text-xs text-dark-gray">الميزانية الاستثمارية</p>
-                  <p className="font-cairo font-semibold">2,000,000 - 5,000,000 ج.س</p>
-                </div>
+                <input className="border border-light-gray rounded-xl p-3 font-cairo text-sm" defaultValue="زين العابدين" placeholder="الاسم الكامل" />
+                <input className="border border-light-gray rounded-xl p-3 font-cairo text-sm" defaultValue="zain.investor@nileinvest.ai" placeholder="البريد الإلكتروني" />
+                <input className="border border-light-gray rounded-xl p-3 font-cairo text-sm" defaultValue="+249 91 234 5678" placeholder="رقم الهاتف" />
+                <input className="border border-light-gray rounded-xl p-3 font-cairo text-sm" defaultValue="الخرطوم" placeholder="المدينة" />
+                <input className="border border-light-gray rounded-xl p-3 font-cairo text-sm" defaultValue="مستثمر فردي" placeholder="نوع المستثمر" />
+                <input className="border border-light-gray rounded-xl p-3 font-cairo text-sm" placeholder="رابط LinkedIn" defaultValue="https://linkedin.com/in/zain" />
               </div>
 
-              <div className="space-y-3">
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo text-sm">إظهار بياناتي لرواد الأعمال المعتمدين</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo text-sm">استقبال تنبيهات الفرص حسب اهتماماتي</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-              </div>
-            </div>
-          )}
-
-          {activeSection === "settings" && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg space-y-6">
-              <div className="flex items-center gap-2">
-                <Settings className="w-5 h-5 text-invest-teal" />
-                <h2 className="font-cairo font-bold text-xl">الإعدادات</h2>
-              </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo">إشعارات فرص جديدة</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo">عرض الملف العام</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo">تفعيل تنبيهات انخفاض المخاطر</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo">استقبال التقارير الأسبوعية تلقائياً</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setKycComplete((prev) => !prev)}
+                  className="px-4 py-2 rounded-lg border border-invest-teal text-invest-teal font-cairo text-sm"
+                >
+                  {kycComplete ? "إلغاء توثيق KYC" : "توثيق KYC"}
+                </button>
+                <button
+                  onClick={() => setProfileDataComplete((prev) => !prev)}
+                  className="px-4 py-2 rounded-lg border border-invest-blue text-invest-blue font-cairo text-sm"
+                >
+                  {profileDataComplete ? "بيانات أخرى مكتملة" : "إكمال البيانات الأخرى"}
+                </button>
+                <button className="px-5 py-2 bg-invest-blue text-white rounded-lg font-cairo font-semibold">تحديث الملف الشخصي</button>
               </div>
 
               <div className="border border-light-gray rounded-xl p-4 space-y-4">
                 <h3 className="font-cairo font-bold text-text-dark">تغيير كلمة المرور</h3>
                 <div className="grid md:grid-cols-3 gap-3">
-                  <input
-                    type="password"
-                    placeholder="كلمة المرور الحالية"
-                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
-                  <input
-                    type="password"
-                    placeholder="كلمة المرور الجديدة"
-                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
-                  <input
-                    type="password"
-                    placeholder="تأكيد كلمة المرور"
-                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
+                  <input type="password" placeholder="كلمة المرور الحالية" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm" />
+                  <input type="password" placeholder="كلمة المرور الجديدة" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm" />
+                  <input type="password" placeholder="تأكيد كلمة المرور" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm" />
                 </div>
-                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
-                  تحديث كلمة المرور
-                </button>
+                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold">تحديث كلمة المرور</button>
+              </div>
+            </div>
+          )}
+
+          {activeSection === "settings" && (
+            <div className="bg-white rounded-2xl p-6 shadow-lg space-y-3">
+              <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-invest-teal" />
+                <h2 className="font-cairo font-bold text-xl">الإعدادات</h2>
+              </div>
+              <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                <span className="font-cairo">إشعارات فرص جديدة</span>
+                <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+              </label>
+              <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
+                <span className="font-cairo">تفعيل تنبيهات انخفاض المخاطر</span>
+                <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
+              </label>
+            </div>
+          )}
+
+          {selectedProject && (
+            <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
+              <div className="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-cairo font-bold text-xl">تفاصيل المشروع</h3>
+                  <button onClick={() => setSelectedProject(null)} className="text-dark-gray font-cairo">إغلاق</button>
+                </div>
+                <p className="font-cairo font-bold text-lg text-invest-blue">{selectedProject.name}</p>
+                <p className="font-cairo text-sm text-dark-gray mt-2">{selectedProject.description}</p>
+                <div className="grid md:grid-cols-3 gap-3 mt-4">
+                  <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">القطاع: {selectedProject.sector}</div>
+                  <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">المرحلة: {selectedProject.stage}</div>
+                  <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">الميزانية: {selectedProject.amount}</div>
+                </div>
               </div>
             </div>
           )}

@@ -26,8 +26,7 @@ type SectionKey =
   | "requests"
   | "messages"
   | "profile"
-  | "settings"
-  | "investors";
+  | "settings";
 
 type EntrepreneurProject = {
   id: number;
@@ -93,7 +92,6 @@ export default function EntrepreneurDashboard() {
   const [personalFiles, setPersonalFiles] = useState({
     nationalId: false,
     personalPhoto: false,
-    bankStatement: false,
   });
 
   const uploadedFilesCount = Object.values(personalFiles).filter(Boolean).length;
@@ -171,7 +169,7 @@ export default function EntrepreneurDashboard() {
   };
 
 
-  const requests = [
+  const [requests, setRequests] = useState([
     {
       id: 1,
       investorName: "أحمد العبدالله",
@@ -199,7 +197,7 @@ export default function EntrepreneurDashboard() {
       date: "2024/06/18",
       time: "14:45",
     },
-  ];
+  ]);
 
   const messages = [
     { id: 1, name: "محمد صلاح", text: "أحتاج مزيد من التفاصيل المالية", time: "10:24" },
@@ -226,7 +224,6 @@ export default function EntrepreneurDashboard() {
     messages: "الرسائل",
     profile: "الملف الشخصي",
     settings: "الإعدادات",
-    investors: "استكشف المستثمرين",
   };
 
   return (
@@ -257,19 +254,6 @@ export default function EntrepreneurDashboard() {
           ))}
         </nav>
 
-        <div className="pt-6 border-t border-invest-blue/30">
-          <button
-            onClick={() => setActiveSection("investors")}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-cairo font-semibold transition ${
-              activeSection === "investors"
-                ? "bg-invest-teal text-invest-blue"
-                : "bg-invest-teal/20 text-invest-teal hover:bg-invest-teal/30"
-            }`}
-          >
-            <span>🚀</span>
-            <span>استكشف المستثمرين</span>
-          </button>
-        </div>
 
         <Link
           to="/"
@@ -470,12 +454,18 @@ export default function EntrepreneurDashboard() {
                     placeholder="اسم المشروع"
                     className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
                   />
-                  <input
+                  <select
                     value={projectForm.sector}
                     onChange={(e) => setProjectForm((prev) => ({ ...prev, sector: e.target.value }))}
-                    placeholder="المجال"
-                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white"
+                  >
+                    <option value="">اختر المجال</option>
+                    <option value="التعليم">التعليم</option>
+                    <option value="الزراعة">الزراعة</option>
+                    <option value="الصحة">الصحة</option>
+                    <option value="الطاقة">الطاقة</option>
+                    <option value="التقنية">التقنية</option>
+                  </select>
                   <input
                     value={projectForm.budget}
                     onChange={(e) => setProjectForm((prev) => ({ ...prev, budget: e.target.value }))}
@@ -490,11 +480,12 @@ export default function EntrepreneurDashboard() {
                     placeholder="مدة تنفيذ المشروع"
                     className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
                   />
-                  <input
+                  <textarea
                     value={projectForm.description}
                     onChange={(e) => setProjectForm((prev) => ({ ...prev, description: e.target.value }))}
                     placeholder="الوصف التفصيلي للمشروع"
-                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
+                    rows={3}
+                    className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal resize-none"
                   />
                 </div>
                 <button
@@ -523,7 +514,10 @@ export default function EntrepreneurDashboard() {
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-1 text-white text-xs rounded ${project.statusColor}`}>{project.status}</span>
                       <button className="p-2 text-invest-blue"><Edit2 className="w-4 h-4" /></button>
-                      <button className="p-2 text-invest-red"><Trash2 className="w-4 h-4" /></button>
+                      <button
+                        onClick={() => setProjects((prev) => prev.filter((item) => item.id !== project.id))}
+                        className="p-2 text-invest-red"
+                      ><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
@@ -544,8 +538,14 @@ export default function EntrepreneurDashboard() {
                     </div>
                     <p className="font-cairo text-sm text-dark-gray mb-3">{request.message}</p>
                     <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-invest-green text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"><CheckCircle className="w-4 h-4" /> قبول</button>
-                      <button className="px-4 py-2 bg-invest-red text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"><XCircle className="w-4 h-4" /> رفض</button>
+                      <button
+                        onClick={() => setRequests((prev) => prev.filter((item) => item.id !== request.id))}
+                        className="px-4 py-2 bg-invest-green text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
+                      ><CheckCircle className="w-4 h-4" /> قبول</button>
+                      <button
+                        onClick={() => setRequests((prev) => prev.filter((item) => item.id !== request.id))}
+                        className="px-4 py-2 bg-invest-red text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
+                      ><XCircle className="w-4 h-4" /> رفض</button>
                     </div>
                   </div>
                 ))}
@@ -602,7 +602,6 @@ export default function EntrepreneurDashboard() {
                 {[
                   { key: "nationalId" as const, label: "رفع الهوية الوطنية" },
                   { key: "personalPhoto" as const, label: "رفع الصورة الشخصية" },
-                  { key: "bankStatement" as const, label: "رفع كشف حساب/إثبات عنوان" },
                 ].map((file) => (
                   <div key={file.key} className="flex items-center justify-between border border-light-gray rounded-lg px-3 py-2.5">
                     <p className="font-cairo text-sm text-text-dark">{file.label}</p>
@@ -649,13 +648,24 @@ export default function EntrepreneurDashboard() {
 
               <div className="space-y-3">
                 <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
-                  <span className="font-cairo text-sm">إظهار الملف للمستثمرين المعتمدين</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
-                </label>
-                <label className="flex items-center justify-between border border-light-gray rounded-xl p-4">
                   <span className="font-cairo text-sm">استقبال تنبيهات المستثمرين الجدد</span>
                   <input type="checkbox" defaultChecked className="w-5 h-5 accent-invest-teal" />
                 </label>
+                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
+                  تحديث الملف الشخصي
+                </button>
+              </div>
+
+              <div className="border border-light-gray rounded-xl p-4 space-y-4">
+                <h3 className="font-cairo font-bold text-text-dark">تغيير كلمة المرور</h3>
+                <div className="grid md:grid-cols-3 gap-3">
+                  <input type="password" placeholder="كلمة المرور الحالية" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal" />
+                  <input type="password" placeholder="كلمة المرور الجديدة" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal" />
+                  <input type="password" placeholder="تأكيد كلمة المرور" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal" />
+                </div>
+                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
+                  تحديث كلمة المرور
+                </button>
               </div>
             </div>
           )}
@@ -684,50 +694,9 @@ export default function EntrepreneurDashboard() {
                 </div>
               </div>
 
-              <div className="border border-light-gray rounded-xl p-4 space-y-4">
-                <h3 className="font-cairo font-bold text-text-dark">تغيير كلمة المرور</h3>
-                <div className="grid md:grid-cols-3 gap-3">
-                  <input
-                    type="password"
-                    placeholder="كلمة المرور الحالية"
-                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
-                  <input
-                    type="password"
-                    placeholder="كلمة المرور الجديدة"
-                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
-                  <input
-                    type="password"
-                    placeholder="تأكيد كلمة المرور"
-                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                  />
-                </div>
-                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold hover:bg-blue-900 transition">
-                  تحديث كلمة المرور
-                </button>
-              </div>
             </div>
           )}
 
-          {/* Explore investors */}
-          {activeSection === "investors" && (
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h2 className="font-cairo font-bold text-2xl mb-6">مستثمرون مقترحون</h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                {["د. منى عبدالله", "عثمان الفكي", "علاء الدين صديق"].map((name) => (
-                  <div key={name} className="p-4 border border-light-gray rounded-xl">
-                    <div className="w-12 h-12 rounded-full bg-invest-blue text-white flex items-center justify-center font-cairo mb-3">
-                      {name.charAt(0)}
-                    </div>
-                    <p className="font-cairo font-bold">{name}</p>
-                    <p className="font-cairo text-xs text-dark-gray">اهتمامات: التقنية، التعليم</p>
-                    <button className="mt-3 px-4 py-2 bg-invest-teal text-white rounded-lg font-cairo text-sm">إرسال دعوة</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

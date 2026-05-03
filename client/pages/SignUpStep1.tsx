@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { TrendingUp, Eye, EyeOff, Check, ShieldCheck } from "lucide-react";
+import { TrendingUp, Eye, EyeOff, Check } from "lucide-react";
 import { useState } from "react";
 
 export default function SignUpStep1() {
@@ -16,12 +16,18 @@ export default function SignUpStep1() {
           fullName: "زين خلف الله",
           email: "zain.founder@nileinvest.ai",
           password: "Founder@123",
+          phone: "+249923456789",
+          city: "الخرطوم",
+          address: "الرياض - شارع الستين",
           redirectTo: "/dashboard",
         }
       : {
           fullName: "زين العابدين",
           email: "zain.investor@nileinvest.ai",
           password: "Investor@123",
+          phone: "+249912345678",
+          city: "الخرطوم",
+          address: "العمارات - شارع 61",
           redirectTo: "/investor-dashboard",
         };
 
@@ -29,6 +35,9 @@ export default function SignUpStep1() {
   const [email, setEmail] = useState(demoData.email);
   const [password, setPassword] = useState(demoData.password);
   const [confirmPassword, setConfirmPassword] = useState(demoData.password);
+  const [phone, setPhone] = useState(demoData.phone);
+  const [city, setCity] = useState(demoData.city);
+  const [address, setAddress] = useState(demoData.address);
   const [agreeTerms, setAgreeTerms] = useState(true);
 
   const handlePasswordChange = (value: string) => {
@@ -94,6 +103,8 @@ export default function SignUpStep1() {
             <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.fullName}</p>
             <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.email}</p>
             <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.password}</p>
+            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.phone}</p>
+            <p className="font-cairo text-sm font-semibold text-text-dark">{demoData.city} - {demoData.address}</p>
           </div>
 
           {/* Form Content */}
@@ -122,6 +133,46 @@ export default function SignUpStep1() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@email.com"
+                className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
+              />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
+                  رقم الهاتف
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+249..."
+                  className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
+                  المدينة
+                </label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="الخرطوم"
+                  className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="font-cairo block text-sm font-bold text-text-dark mb-3 uppercase tracking-wide">
+                العنوان
+              </label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="أدخل العنوان"
                 className="w-full px-6 py-4 border-2 border-light-gray rounded-xl focus:border-invest-teal focus:bg-white focus:outline-none font-cairo text-sm transition-all duration-200 shadow-sm"
               />
             </div>
@@ -216,16 +267,6 @@ export default function SignUpStep1() {
               className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105"
             >
               تسجيل
-            </button>
-
-            <button
-              onClick={() => navigate(demoData.redirectTo)}
-              className="w-full py-3 border-2 border-invest-teal/40 text-invest-teal rounded-xl font-cairo font-bold text-sm hover:bg-invest-teal/10 transition-all duration-200"
-            >
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5" />
-                التسجيل عبر الهوية الرقمية SudaPass
-              </span>
             </button>
 
             {/* Login Link */}

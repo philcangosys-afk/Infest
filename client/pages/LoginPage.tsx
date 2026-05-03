@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { TrendingUp, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { TrendingUp, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -108,32 +108,6 @@ export default function LoginPage() {
               دخول
             </button>
 
-            {/* Divider */}
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex-1 h-px bg-light-gray"></div>
-              <span className="font-cairo text-sm text-dark-gray font-semibold">أو</span>
-              <div className="flex-1 h-px bg-light-gray"></div>
-            </div>
-
-            {/* Social Login Buttons */}
-            <div className="grid grid-cols-2 gap-4 mb-10">
-              <button className="py-4 border-2 border-light-gray rounded-xl font-cairo font-bold text-sm hover:border-invest-teal hover:bg-light-gray transition-all duration-200 flex items-center justify-center gap-3 group">
-                <span className="text-2xl group-hover:scale-110 transition">🔵</span>
-                <span className="hidden sm:inline group-hover:text-invest-teal">Google</span>
-              </button>
-              <button className="py-4 border-2 border-light-gray rounded-xl font-cairo font-bold text-sm hover:border-invest-teal hover:bg-light-gray transition-all duration-200 flex items-center justify-center gap-3 group">
-                <span className="text-2xl group-hover:scale-110 transition">🍎</span>
-                <span className="hidden sm:inline group-hover:text-invest-teal">Apple</span>
-              </button>
-            </div>
-
-            <button
-              onClick={() => navigate(demoCredentials.redirectTo)}
-              className="w-full py-3 border-2 border-invest-teal/40 text-invest-teal rounded-xl font-cairo font-bold text-sm hover:bg-invest-teal/10 transition-all duration-200 mb-8 inline-flex items-center justify-center gap-2"
-            >
-              <ShieldCheck className="w-5 h-5" />
-              الدخول عبر الهوية الرقمية SudaPass
-            </button>
 
             {/* Sign Up Link */}
             <p className="font-cairo text-center text-dark-gray text-lg">

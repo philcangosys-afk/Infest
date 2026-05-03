@@ -396,7 +396,7 @@ export default function Index() {
             { v: "+500", l: "مشروع مسجل", icon: Briefcase },
             { v: "+1000", l: "مستثمر نشط", icon: Users },
             { v: "+2000", l: "رائد أعمال", icon: TrendingUp },
-            { v: "+50", l: "صفقة منجزة", icon: Handshake },
+            { v: "+50", l: "مطابقات ناجحة", icon: Handshake },
           ].map((s, i) => {
             const Icon = s.icon;
             return (
@@ -525,7 +525,7 @@ export default function Index() {
             <span className="font-cairo text-xs font-bold text-invest-teal bg-invest-teal/10 px-3 py-1.5 rounded-full inline-block mb-4">
               آراء العملاء
             </span>
-            <h2 className="font-cairo text-4xl sm:text-5xl font-bold text-invest-blue mb-4">
+            <h2 className="font-cairo text-5xl sm:text-6xl font-bold text-invest-blue mb-4">
               ثقة عملائنا تتحدث عنا
             </h2>
           </div>
