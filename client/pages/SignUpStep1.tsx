@@ -62,6 +62,11 @@ export default function SignUpStep1() {
       return;
     }
 
+    if (password.length < 6) {
+      setErrorMessage("كلمة المرور يجب أن تكون 6 أحرف على الأقل.");
+      return;
+    }
+
     if (!agreeTerms) {
       setErrorMessage("يجب الموافقة على الشروط والأحكام.");
       return;
@@ -85,7 +90,18 @@ export default function SignUpStep1() {
 
     if (error || !data.user) {
       setLoading(false);
-      setErrorMessage("تعذر إنشاء الحساب. تأكد من البريد الإلكتروني أو حاول لاحقاً.");
+
+      if (error?.code === "weak_password") {
+        setErrorMessage("كلمة المرور ضعيفة. يجب أن تكون 6 أحرف على الأقل.");
+        return;
+      }
+
+      if (error?.message?.toLowerCase().includes("already registered")) {
+        setErrorMessage("هذا البريد الإلكتروني مسجل مسبقاً. جرّب تسجيل الدخول.");
+        return;
+      }
+
+      setErrorMessage(error?.message ? `تعذر إنشاء الحساب: ${error.message}` : "تعذر إنشاء الحساب. حاول مرة أخرى.");
       return;
     }
 
