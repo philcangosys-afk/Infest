@@ -105,6 +105,14 @@ export default function SignUpStep1() {
       return;
     }
 
+    const hasSession = Boolean(data.session);
+
+    if (!hasSession) {
+      setLoading(false);
+      navigate(`/login?role=${role}`);
+      return;
+    }
+
     const { error: profileError } = await supabase.from("profiles").upsert({
       id: data.user.id,
       role,
@@ -123,7 +131,7 @@ export default function SignUpStep1() {
 
     if (profileError) {
       setLoading(false);
-      setErrorMessage("تم إنشاء الحساب لكن تعذر حفظ الملف الشخصي.");
+      setErrorMessage(profileError.message ? `تم إنشاء الحساب لكن تعذر حفظ الملف الشخصي: ${profileError.message}` : "تم إنشاء الحساب لكن تعذر حفظ الملف الشخصي.");
       return;
     }
 
