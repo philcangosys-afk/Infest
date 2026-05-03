@@ -101,6 +101,11 @@ export default function SignUpStep1() {
         return;
       }
 
+      if (error?.code === "over_email_send_rate_limit" || error?.message?.toLowerCase().includes("email rate limit exceeded")) {
+        setErrorMessage("تم تجاوز عدد محاولات إرسال بريد التحقق مؤقتاً. انتظر قليلاً ثم أعد المحاولة.");
+        return;
+      }
+
       setErrorMessage(error?.message ? `تعذر إنشاء الحساب: ${error.message}` : "تعذر إنشاء الحساب. حاول مرة أخرى.");
       return;
     }
