@@ -264,8 +264,8 @@ export default function EntrepreneurDashboard() {
         budget: projectForm.budget,
         duration: projectForm.duration || "غير محدد",
         description: projectForm.description,
-        status: "قيد المراجعة",
-        status_color: "bg-invest-blue",
+        status: "منشور",
+        status_color: "bg-invest-green",
       })
       .select("id, name, status, status_color, created_at, sector, budget, description, duration")
       .single();
@@ -290,7 +290,7 @@ export default function EntrepreneurDashboard() {
     setProjects((prev) => [mappedProject, ...prev]);
     setSelectedAdvisorProject(mappedProject.name);
     setProjectForm({ name: "", sector: "", budget: "", duration: "", description: "" });
-    setActionNotice("تم إضافة المشروع بنجاح.");
+    setActionNotice("تم نشر المشروع مباشرة وهو ظاهر الآن للمستثمرين في صفحة المشاريع.");
   };
 
   const handleDeleteProject = async (projectId: number) => {
