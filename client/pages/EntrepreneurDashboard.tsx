@@ -318,11 +318,11 @@ export default function EntrepreneurDashboard() {
     setActionNotice("تم حذف المشروع.");
   };
 
-  const loadChatMessages = async (request: InvestorRequest) => {
+  const loadChatMessages = async (request: InvestorRequest, silent = false) => {
     if (!isSupabaseConfigured) return;
 
     setSelectedRequestChat(request);
-    setLoadingChat(true);
+    if (!silent) setLoadingChat(true);
 
     const { data, error } = await supabase
       .from("messages")
@@ -330,7 +330,7 @@ export default function EntrepreneurDashboard() {
       .eq("request_id", request.id)
       .order("created_at", { ascending: true });
 
-    setLoadingChat(false);
+    if (!silent) setLoadingChat(false);
 
     if (error) {
       setChatMessages([]);
@@ -348,6 +348,26 @@ export default function EntrepreneurDashboard() {
       })),
     );
   };
+
+  useEffect(() => {
+    if (activeSection !== "messages") return;
+    const availableRequests = requests.filter((request) => request.status !== "مرفوض");
+    if (!availableRequests.length) return;
+    if (selectedRequestChat) return;
+
+    loadChatMessages(availableRequests[0]);
+  }, [activeSection, requests, selectedRequestChat]);
+
+  useEffect(() => {
+    if (activeSection !== "messages") return;
+    if (!selectedRequestChat) return;
+
+    const intervalId = setInterval(() => {
+      loadChatMessages(selectedRequestChat, true);
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [activeSection, selectedRequestChat]);
 
   const sendChatMessage = async () => {
     if (!isSupabaseConfigured || !currentUserId || !selectedRequestChat) return;

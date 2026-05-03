@@ -344,11 +344,11 @@ export default function InvestorDashboard() {
     setActionNotice("تم إرسال طلب التواصل إلى رائد الأعمال بنجاح.");
   };
 
-  const loadChatMessages = async (request: RequestItem) => {
+  const loadChatMessages = async (request: RequestItem, silent = false) => {
     if (!isSupabaseConfigured) return;
 
     setSelectedRequestChat(request);
-    setLoadingChat(true);
+    if (!silent) setLoadingChat(true);
 
     const { data, error } = await supabase
       .from("messages")
@@ -356,7 +356,7 @@ export default function InvestorDashboard() {
       .eq("request_id", request.id)
       .order("created_at", { ascending: true });
 
-    setLoadingChat(false);
+    if (!silent) setLoadingChat(false);
 
     if (error) {
       setChatMessages([]);
@@ -409,6 +409,25 @@ export default function InvestorDashboard() {
     ]);
     setChatInput("");
   };
+
+  useEffect(() => {
+    if (activeSection !== "messages") return;
+    if (!myRequests.length) return;
+    if (selectedRequestChat) return;
+
+    loadChatMessages(myRequests[0]);
+  }, [activeSection, myRequests, selectedRequestChat]);
+
+  useEffect(() => {
+    if (activeSection !== "messages") return;
+    if (!selectedRequestChat) return;
+
+    const intervalId = setInterval(() => {
+      loadChatMessages(selectedRequestChat, true);
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [activeSection, selectedRequestChat]);
 
   const deleteRequest = async (requestId: number) => {
     if (!isSupabaseConfigured) {
