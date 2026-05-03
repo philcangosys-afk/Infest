@@ -102,7 +102,20 @@ export default function SignUpStep1() {
       }
 
       if (error?.code === "over_email_send_rate_limit" || error?.message?.toLowerCase().includes("email rate limit exceeded")) {
-        setErrorMessage("تم تجاوز عدد محاولات إرسال بريد التحقق مؤقتاً. انتظر قليلاً ثم أعد المحاولة.");
+        const { data: existingSession, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (!signInError && existingSession.user) {
+          setLoading(false);
+          navigate(role === "entrepreneur" ? "/dashboard" : "/investor-dashboard");
+          return;
+        }
+
+        setErrorMessage(
+          "تم تجاوز حد إرسال بريد التحقق في إعدادات Supabase لهذا المشروع. إذا كان الحساب موجوداً استخدم تسجيل الدخول، وإذا كان جديداً يلزم رفع الحد أو تعطيل تأكيد البريد من إعدادات Supabase.",
+        );
         return;
       }
 
