@@ -216,11 +216,10 @@ export default function InvestorDashboard() {
   useEffect(() => {
     const isBasicProfileComplete = Boolean(
       profileForm.fullName.trim() &&
+      profileForm.email.trim() &&
       profileForm.phone.trim() &&
       profileForm.city.trim() &&
-      profileForm.address.trim() &&
-      profileForm.investorType.trim() &&
-      profileForm.linkedinUrl.trim(),
+      profileForm.address.trim(),
     );
     setProfileDataComplete(isBasicProfileComplete);
   }, [profileForm]);
