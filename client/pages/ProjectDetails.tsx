@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type ProjectDetailsData = {
   id: number;
@@ -21,6 +21,13 @@ export default function ProjectDetails() {
   useEffect(() => {
     const loadProject = async () => {
       setLoading(true);
+
+      if (!isSupabaseConfigured) {
+        setProject(null);
+        setLoading(false);
+        return;
+      }
+
       const numericId = Number(id);
       if (!numericId) {
         setProject(null);

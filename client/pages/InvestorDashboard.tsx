@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile";
 
@@ -94,6 +94,12 @@ export default function InvestorDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     setActionNotice("");
+
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
 
     const {
       data: { user },
@@ -199,6 +205,10 @@ export default function InvestorDashboard() {
   }, []);
 
   const toggleFavorite = async (projectId: number, isFavorite: boolean) => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
     if (!currentUserId) return;
 
     if (isFavorite) {
@@ -231,6 +241,10 @@ export default function InvestorDashboard() {
   };
 
   const sendContactRequest = async (project: Project) => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
     if (!currentUserId) return;
 
     if (!isVerified) {
@@ -269,6 +283,11 @@ export default function InvestorDashboard() {
   };
 
   const deleteRequest = async (requestId: number) => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+
     const { error } = await supabase.from("investment_requests").delete().eq("id", requestId);
 
     if (error) {
@@ -280,6 +299,10 @@ export default function InvestorDashboard() {
   };
 
   const saveProfile = async () => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
     if (!currentUserId) return;
     setSavingProfile(true);
 

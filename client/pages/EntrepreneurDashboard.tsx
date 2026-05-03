@@ -17,7 +17,7 @@ import {
   Award,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type SectionKey = "dashboard" | "projects" | "requests" | "messages" | "profile";
 
@@ -123,6 +123,12 @@ export default function EntrepreneurDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     setActionNotice("");
+
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
 
     const {
       data: { user },
@@ -239,6 +245,10 @@ export default function EntrepreneurDashboard() {
   }, []);
 
   const handleAddProject = async () => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
     if (!currentUserId) return;
     if (!projectForm.name || !projectForm.sector || !projectForm.budget || !projectForm.description) {
       setActionNotice("يرجى إكمال بيانات المشروع قبل الإضافة.");
@@ -284,6 +294,11 @@ export default function EntrepreneurDashboard() {
   };
 
   const handleDeleteProject = async (projectId: number) => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+
     const { error } = await supabase.from("projects").delete().eq("id", projectId);
 
     if (error) {
@@ -296,6 +311,11 @@ export default function EntrepreneurDashboard() {
   };
 
   const handleRequestDecision = async (requestId: number, status: "مقبول" | "مرفوض") => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+
     const { error } = await supabase.from("investment_requests").update({ status }).eq("id", requestId);
 
     if (error) {
@@ -308,6 +328,10 @@ export default function EntrepreneurDashboard() {
   };
 
   const saveProfile = async () => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
     if (!currentUserId) return;
     setSavingProfile(true);
 

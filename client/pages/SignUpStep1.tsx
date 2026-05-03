@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff, Check } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export default function SignUpStep1() {
   const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +46,11 @@ export default function SignUpStep1() {
 
   const handleSignUp = async () => {
     setErrorMessage("");
+
+    if (!isSupabaseConfigured) {
+      setErrorMessage("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
 
     if (!fullName || !email || !phone || !city || !address || !password) {
       setErrorMessage("يرجى إكمال جميع الحقول المطلوبة.");

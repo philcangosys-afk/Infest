@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Search, TrendingUp, Heart, Filter, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type ProjectCard = {
   id: number;
@@ -54,6 +54,12 @@ export default function BrowseProjects() {
     const loadProjects = async () => {
       setLoading(true);
       setErrorMessage("");
+
+      if (!isSupabaseConfigured) {
+        setProjects([]);
+        setLoading(false);
+        return;
+      }
 
       const { data: projectRows, error } = await supabase
         .from("projects")
@@ -139,6 +145,11 @@ export default function BrowseProjects() {
   };
 
   const toggleFavorite = async (projectId: number) => {
+    if (!isSupabaseConfigured) {
+      setErrorMessage("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();

@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +15,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkSession = async () => {
+      if (!isSupabaseConfigured) return;
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -34,6 +36,11 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setErrorMessage("");
+
+    if (!isSupabaseConfigured) {
+      setErrorMessage("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
 
     if (!email || !password) {
       setErrorMessage("يرجى إدخال البريد الإلكتروني وكلمة المرور.");

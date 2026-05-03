@@ -16,7 +16,7 @@ import {
   Quote,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Audience = "investor" | "entrepreneur";
 
@@ -42,6 +42,11 @@ export default function Index() {
 
   useEffect(() => {
     const loadShowcase = async () => {
+      if (!isSupabaseConfigured) {
+        setProjectShowcase([]);
+        return;
+      }
+
       const { data: projectRows } = await supabase
         .from("projects")
         .select("id, owner_id, name, sector, budget")
