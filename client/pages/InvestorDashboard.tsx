@@ -12,7 +12,7 @@ import {
   Wand2,
   Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile";
@@ -76,6 +76,8 @@ export default function InvestorDashboard() {
     linkedinUrl: "",
   });
   const [kycComplete, setKycComplete] = useState(false);
+  const [kycDocumentType, setKycDocumentType] = useState<"passport" | "national_id">("national_id");
+  const [kycDocumentName, setKycDocumentName] = useState("");
   const [profileDataComplete, setProfileDataComplete] = useState(false);
 
   const isVerified = kycComplete && profileDataComplete;
@@ -138,7 +140,9 @@ export default function InvestorDashboard() {
       linkedinUrl: profile.linkedin_url ?? "",
     });
 
-    setKycComplete(Boolean(profile.kyc_complete));
+    const isKycComplete = Boolean(profile.kyc_complete);
+    setKycComplete(isKycComplete);
+    setKycDocumentName(isKycComplete ? "مستند مرفوع مسبقاً" : "");
     setProfileDataComplete(Boolean(profile.profile_data_complete));
 
     const { data: projectsRows, error: projectsError } = await supabase
@@ -240,6 +244,15 @@ export default function InvestorDashboard() {
     setFavoriteIds((prev) => [...prev, projectId]);
   };
 
+  const handleKycDocumentUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setKycDocumentName(file.name);
+    setKycComplete(true);
+    setActionNotice("تم رفع مستند التحقق بنجاح.");
+  };
+
   const sendContactRequest = async (project: Project) => {
     if (!isSupabaseConfigured) {
       setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
@@ -248,7 +261,7 @@ export default function InvestorDashboard() {
     if (!currentUserId) return;
 
     if (!isVerified) {
-      setActionNotice("لا يمكن إرسال طلب التواصل قبل اكتمال التوثيق.");
+      setActionNotice("لا يمكن إرسال طلب التواصل قبل رفع مستند الجواز أو الرقم الوطني وإكمال الملف الشخصي.");
       return;
     }
 
@@ -692,10 +705,35 @@ export default function InvestorDashboard() {
                 />
               </div>
 
+              <div className="border border-light-gray rounded-xl p-4 space-y-3 bg-light-gray/40">
+                <p className="font-cairo text-sm font-bold text-text-dark">متطلبات KYC</p>
+                <p className="font-cairo text-xs text-dark-gray">لابد من رفع مستند الجواز أو الرقم الوطني لإكمال التحقق.</p>
+
+                <select
+                  value={kycDocumentType}
+                  onChange={(e) => {
+                    setKycDocumentType(e.target.value as "passport" | "national_id");
+                    setKycComplete(false);
+                    setKycDocumentName("");
+                  }}
+                  className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm focus:outline-none focus:border-invest-teal bg-white w-full md:w-72"
+                >
+                  <option value="national_id">مستند الرقم الوطني</option>
+                  <option value="passport">مستند جواز السفر</option>
+                </select>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="px-4 py-2 rounded-lg border border-invest-teal text-invest-teal font-cairo text-sm cursor-pointer hover:bg-invest-teal/10">
+                    رفع المستند
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleKycDocumentUpload} />
+                  </label>
+                  <span className="font-cairo text-xs text-dark-gray">
+                    {kycDocumentName ? `تم الرفع: ${kycDocumentName}` : "لم يتم رفع أي مستند بعد"}
+                  </span>
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-3">
-                <button onClick={() => setKycComplete((prev) => !prev)} className="px-4 py-2 rounded-lg border border-invest-teal text-invest-teal font-cairo text-sm">
-                  {kycComplete ? "إلغاء توثيق KYC" : "توثيق KYC"}
-                </button>
                 <button onClick={() => setProfileDataComplete((prev) => !prev)} className="px-4 py-2 rounded-lg border border-invest-blue text-invest-blue font-cairo text-sm">
                   {profileDataComplete ? "بيانات أخرى مكتملة" : "إكمال البيانات الأخرى"}
                 </button>
