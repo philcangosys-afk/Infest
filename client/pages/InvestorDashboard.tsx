@@ -41,6 +41,7 @@ type ProfileForm = {
   email: string;
   phone: string;
   city: string;
+  address: string;
   investorType: string;
   linkedinUrl: string;
 };
@@ -72,6 +73,7 @@ export default function InvestorDashboard() {
     email: "",
     phone: "",
     city: "",
+    address: "",
     investorType: "",
     linkedinUrl: "",
   });
@@ -117,7 +119,7 @@ export default function InvestorDashboard() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, full_name, phone, city, investor_type, linkedin_url, kyc_complete, profile_data_complete")
+      .select("role, full_name, phone, city, address, investor_type, linkedin_url, kyc_complete, profile_data_complete")
       .eq("id", user.id)
       .single();
 
@@ -137,6 +139,7 @@ export default function InvestorDashboard() {
       email: user.email ?? "",
       phone: profile.phone ?? "",
       city: profile.city ?? "",
+      address: profile.address ?? "",
       investorType: profile.investor_type ?? "",
       linkedinUrl: profile.linkedin_url ?? "",
     });
@@ -215,6 +218,7 @@ export default function InvestorDashboard() {
       profileForm.fullName.trim() &&
       profileForm.phone.trim() &&
       profileForm.city.trim() &&
+      profileForm.address.trim() &&
       profileForm.investorType.trim() &&
       profileForm.linkedinUrl.trim(),
     );
@@ -356,6 +360,7 @@ export default function InvestorDashboard() {
         full_name: profileForm.fullName,
         phone: profileForm.phone,
         city: profileForm.city,
+        address: profileForm.address,
         investor_type: profileForm.investorType,
         linkedin_url: profileForm.linkedinUrl,
         kyc_complete: kycStatus === "approved",
@@ -698,7 +703,7 @@ export default function InvestorDashboard() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-blue/10 text-invest-blue">KYC: {kycComplete ? "50%" : "0%"}</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-teal/10 text-invest-teal">اكتمال البيانات الأساسية: {profileDataComplete ? "50%" : "0%"}</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-cairo bg-invest-teal/10 text-invest-teal">المعلومات الأساسية: {profileDataComplete ? "50%" : "0%"}</span>
                 </div>
               </div>
 
@@ -721,6 +726,12 @@ export default function InvestorDashboard() {
                   value={profileForm.city}
                   onChange={(e) => setProfileForm((prev) => ({ ...prev, city: e.target.value }))}
                   placeholder="المدينة"
+                />
+                <input
+                  className="border border-light-gray rounded-xl p-3 font-cairo text-sm"
+                  value={profileForm.address}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, address: e.target.value }))}
+                  placeholder="العنوان"
                 />
                 <input
                   className="border border-light-gray rounded-xl p-3 font-cairo text-sm"
