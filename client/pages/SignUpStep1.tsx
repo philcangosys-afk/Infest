@@ -21,6 +21,7 @@ export default function SignUpStep1() {
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showAddUserHint, setShowAddUserHint] = useState(false);
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
@@ -46,6 +47,7 @@ export default function SignUpStep1() {
 
   const handleSignUp = async () => {
     setErrorMessage("");
+    setShowAddUserHint(false);
 
     if (!isSupabaseConfigured) {
       setErrorMessage("ربط قاعدة البيانات غير مكتمل حالياً.");
@@ -102,19 +104,9 @@ export default function SignUpStep1() {
       }
 
       if (error?.code === "over_email_send_rate_limit" || error?.message?.toLowerCase().includes("email rate limit exceeded")) {
-        const { data: existingSession, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (!signInError && existingSession.user) {
-          setLoading(false);
-          navigate(role === "entrepreneur" ? "/dashboard" : "/investor-dashboard");
-          return;
-        }
-
+        setShowAddUserHint(true);
         setErrorMessage(
-          "تم تجاوز حد إرسال بريد التحقق في إعدادات Supabase لهذا المشروع. إذا كان الحساب موجوداً استخدم تسجيل الدخول، وإذا كان جديداً يلزم رفع الحد أو تعطيل تأكيد البريد من إعدادات Supabase.",
+          "تم تجاوز حد إرسال بريد التحقق في Supabase. الحساب الجديد لم يُنشأ بعد. أنشئ المستخدم من Supabase Authentication → Users → Add user ثم ادخل من صفحة تسجيل الدخول.",
         );
         return;
       }
@@ -308,6 +300,19 @@ export default function SignUpStep1() {
 
             {errorMessage && (
               <div className="rounded-xl border border-invest-red/20 bg-invest-red/10 p-3 font-cairo text-sm text-invest-red">{errorMessage}</div>
+            )}
+
+            {showAddUserHint && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 font-cairo text-sm text-amber-800">
+                <p>إذا أنشأت المستخدم يدويًا من Supabase، ادخل الآن من صفحة تسجيل الدخول.</p>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/login?role=${role}`)}
+                  className="mt-2 px-4 py-2 rounded-lg border border-amber-500 text-amber-700 font-cairo font-semibold"
+                >
+                  الذهاب إلى تسجيل الدخول
+                </button>
+              </div>
             )}
 
             <button
