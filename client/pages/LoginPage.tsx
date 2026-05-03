@@ -75,11 +75,13 @@ export default function LoginPage() {
 
     if (!profile) {
       const fullName = (user.user_metadata.full_name as string | undefined) ?? "مستخدم جديد";
+      const metadataRole =
+        (user.user_metadata.role as string | undefined) === "entrepreneur" ? "entrepreneur" : "investor";
       const { data: newProfile, error: insertError } = await supabase
         .from("profiles")
         .insert({
           id: user.id,
-          role,
+          role: metadataRole,
           full_name: fullName,
           phone: (user.user_metadata.phone as string | undefined) ?? null,
           city: (user.user_metadata.city as string | undefined) ?? null,
@@ -94,8 +96,30 @@ export default function LoginPage() {
         return;
       }
 
+      if (newProfile.role !== role) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        setErrorMessage(
+          newProfile.role === "entrepreneur"
+            ? "هذا الحساب مسجل كرائد أعمال. استخدم صفحة دخول رواد الأعمال."
+            : "هذا الحساب مسجل كمستثمر. استخدم صفحة دخول المستثمرين.",
+        );
+        return;
+      }
+
       setLoading(false);
       navigate(newProfile.role === "entrepreneur" ? "/dashboard" : "/investor-dashboard");
+      return;
+    }
+
+    if (profile.role !== role) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      setErrorMessage(
+        profile.role === "entrepreneur"
+          ? "هذا الحساب مسجل كرائد أعمال. استخدم صفحة دخول رواد الأعمال."
+          : "هذا الحساب مسجل كمستثمر. استخدم صفحة دخول المستثمرين.",
+      );
       return;
     }
 
