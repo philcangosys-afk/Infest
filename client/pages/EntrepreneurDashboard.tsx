@@ -35,12 +35,21 @@ type EntrepreneurProject = {
 
 type InvestorRequest = {
   id: number;
+  investorId: string;
   investorName: string;
   projectName: string;
   message: string;
   date: string;
   time: string;
   status: string;
+};
+
+type ChatMessage = {
+  id: number;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  createdAt: string;
 };
 
 type ProfileForm = {
@@ -83,11 +92,10 @@ export default function EntrepreneurDashboard() {
 
   const [projects, setProjects] = useState<EntrepreneurProject[]>([]);
   const [requests, setRequests] = useState<InvestorRequest[]>([]);
-  const [messages] = useState([
-    { id: 1, name: "محمد صلاح", text: "أحتاج مزيد من التفاصيل المالية", time: "10:24" },
-    { id: 2, name: "نجلاء حسن", text: "أرسلت عرض الاستثمار", time: "09:10" },
-    { id: 3, name: "عبدالرحمن آدم", text: "متى يمكننا الاجتماع؟", time: "أمس" },
-  ]);
+  const [selectedRequestChat, setSelectedRequestChat] = useState<InvestorRequest | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [loadingChat, setLoadingChat] = useState(false);
 
   const [projectForm, setProjectForm] = useState({
     name: "",
@@ -207,7 +215,6 @@ export default function EntrepreneurDashboard() {
       .from("investment_requests")
       .select("id, investor_id, project_id, message, status, created_at")
       .eq("entrepreneur_id", user.id)
-      .eq("status", "تم الإرسال")
       .order("created_at", { ascending: false });
 
     const investorIds = [...new Set((requestRows ?? []).map((row) => row.investor_id))];
@@ -228,6 +235,7 @@ export default function EntrepreneurDashboard() {
     setRequests(
       (requestRows ?? []).map((row) => ({
         id: row.id,
+        investorId: row.investor_id,
         investorName: investorNameMap.get(row.investor_id) ?? "مستثمر",
         projectName: projectNameMap.get(row.project_id) ?? "مشروع",
         message: row.message || `طلب تواصل جديد بخصوص ${projectNameMap.get(row.project_id) ?? "المشروع"}`,
@@ -310,6 +318,72 @@ export default function EntrepreneurDashboard() {
     setActionNotice("تم حذف المشروع.");
   };
 
+  const loadChatMessages = async (request: InvestorRequest) => {
+    if (!isSupabaseConfigured) return;
+
+    setSelectedRequestChat(request);
+    setLoadingChat(true);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select("id, sender_id, receiver_id, content, created_at")
+      .eq("request_id", request.id)
+      .order("created_at", { ascending: true });
+
+    setLoadingChat(false);
+
+    if (error) {
+      setChatMessages([]);
+      setActionNotice("لتفعيل الرسائل الحقيقية أنشئ جدول messages في قاعدة البيانات.");
+      return;
+    }
+
+    setChatMessages(
+      (data ?? []).map((item) => ({
+        id: item.id,
+        senderId: item.sender_id,
+        receiverId: item.receiver_id,
+        content: item.content,
+        createdAt: item.created_at,
+      })),
+    );
+  };
+
+  const sendChatMessage = async () => {
+    if (!isSupabaseConfigured || !currentUserId || !selectedRequestChat) return;
+
+    const message = chatInput.trim();
+    if (!message) return;
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        request_id: selectedRequestChat.id,
+        sender_id: currentUserId,
+        receiver_id: selectedRequestChat.investorId,
+        content: message,
+      })
+      .select("id, sender_id, receiver_id, content, created_at")
+      .single();
+
+    if (error || !data) {
+      setActionNotice("تعذر إرسال الرسالة. تأكد من وجود جدول messages وصلاحياته.");
+      return;
+    }
+
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: data.id,
+        senderId: data.sender_id,
+        receiverId: data.receiver_id,
+        content: data.content,
+        createdAt: data.created_at,
+      },
+    ]);
+    setChatInput("");
+  };
+
   const handleRequestDecision = async (requestId: number, status: "مقبول" | "مرفوض") => {
     if (!isSupabaseConfigured) {
       setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
@@ -323,7 +397,7 @@ export default function EntrepreneurDashboard() {
       return;
     }
 
-    setRequests((prev) => prev.filter((item) => item.id !== requestId));
+    setRequests((prev) => prev.map((item) => (item.id === requestId ? { ...item, status } : item)));
     setActionNotice(`تم ${status === "مقبول" ? "قبول" : "رفض"} الطلب.`);
   };
 
@@ -674,20 +748,24 @@ export default function EntrepreneurDashboard() {
                       </p>
                     </div>
                     <p className="font-cairo text-sm text-dark-gray mb-3">{request.message}</p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleRequestDecision(request.id, "مقبول")}
-                        className="px-4 py-2 bg-invest-green text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
-                      >
-                        <CheckCircle className="w-4 h-4" /> قبول
-                      </button>
-                      <button
-                        onClick={() => handleRequestDecision(request.id, "مرفوض")}
-                        className="px-4 py-2 bg-invest-red text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
-                      >
-                        <XCircle className="w-4 h-4" /> رفض
-                      </button>
-                    </div>
+                    {request.status === "تم الإرسال" ? (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRequestDecision(request.id, "مقبول")}
+                          className="px-4 py-2 bg-invest-green text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
+                        >
+                          <CheckCircle className="w-4 h-4" /> قبول
+                        </button>
+                        <button
+                          onClick={() => handleRequestDecision(request.id, "مرفوض")}
+                          className="px-4 py-2 bg-invest-red text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
+                        >
+                          <XCircle className="w-4 h-4" /> رفض
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="inline-flex px-3 py-1 rounded-full bg-light-gray text-text-dark font-cairo text-xs">{request.status}</span>
+                    )}
                   </div>
                 ))}
                 {requests.length === 0 && <p className="font-cairo text-dark-gray">لا توجد طلبات واردة حالياً.</p>}
@@ -698,16 +776,65 @@ export default function EntrepreneurDashboard() {
           {!loading && activeSection === "messages" && (
             <div className="bg-white rounded-2xl p-8 shadow-lg">
               <h2 className="font-cairo font-bold text-2xl mb-6">الرسائل</h2>
-              <div className="space-y-3">
-                {messages.map((msg) => (
-                  <button key={msg.id} className="w-full text-right p-4 border border-light-gray rounded-xl hover:bg-light-gray transition">
-                    <div className="flex items-center justify-between">
-                      <p className="font-cairo font-semibold">{msg.name}</p>
-                      <p className="font-cairo text-xs text-dark-gray">{msg.time}</p>
-                    </div>
-                    <p className="font-cairo text-sm text-dark-gray mt-1">{msg.text}</p>
-                  </button>
-                ))}
+              <div className="grid lg:grid-cols-3 gap-4">
+                <div className="space-y-2 lg:col-span-1">
+                  {requests
+                    .filter((request) => request.status !== "مرفوض")
+                    .map((request) => (
+                      <button
+                        key={request.id}
+                        onClick={() => loadChatMessages(request)}
+                        className={`w-full text-right p-3 rounded-xl border font-cairo text-sm ${
+                          selectedRequestChat?.id === request.id ? "border-invest-teal bg-invest-teal/5" : "border-light-gray hover:bg-light-gray"
+                        }`}
+                      >
+                        <p className="font-semibold">{request.investorName}</p>
+                        <p className="text-xs text-dark-gray mt-1">{request.projectName}</p>
+                        <p className="text-xs text-dark-gray mt-1">{request.status}</p>
+                      </button>
+                    ))}
+                  {requests.filter((request) => request.status !== "مرفوض").length === 0 && (
+                    <p className="font-cairo text-sm text-dark-gray">لا توجد محادثات حالياً.</p>
+                  )}
+                </div>
+
+                <div className="lg:col-span-2 border border-light-gray rounded-xl p-4 min-h-[320px] flex flex-col">
+                  {!selectedRequestChat ? (
+                    <p className="font-cairo text-dark-gray">اختر محادثة من القائمة لبدء الرد.</p>
+                  ) : (
+                    <>
+                      <p className="font-cairo font-bold mb-3">محادثة مع: {selectedRequestChat.investorName}</p>
+                      <div className="flex-1 space-y-2 overflow-y-auto mb-3">
+                        {loadingChat ? (
+                          <p className="font-cairo text-sm text-dark-gray">جاري تحميل الرسائل...</p>
+                        ) : chatMessages.length ? (
+                          chatMessages.map((msg) => (
+                            <div key={msg.id} className={`flex ${msg.senderId === currentUserId ? "justify-end" : "justify-start"}`}>
+                              <div className={`max-w-[80%] rounded-xl px-3 py-2 font-cairo text-sm ${msg.senderId === currentUserId ? "bg-invest-blue text-white" : "bg-light-gray text-text-dark"}`}>
+                                {msg.content}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="font-cairo text-sm text-dark-gray">لا توجد رسائل بعد. ابدأ المحادثة الآن.</p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <input
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
+                          placeholder="اكتب رسالتك..."
+                          className="flex-1 border border-light-gray rounded-lg px-4 py-2 font-cairo text-sm"
+                        />
+                        <button onClick={sendChatMessage} className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm">
+                          إرسال
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}

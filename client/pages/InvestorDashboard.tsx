@@ -34,6 +34,15 @@ type RequestItem = {
   project: string;
   status: string;
   date: string;
+  entrepreneurId: string;
+};
+
+type ChatMessage = {
+  id: number;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  createdAt: string;
 };
 
 type ProfileForm = {
@@ -63,6 +72,10 @@ export default function InvestorDashboard() {
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [myRequests, setMyRequests] = useState<RequestItem[]>([]);
+  const [selectedRequestChat, setSelectedRequestChat] = useState<RequestItem | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [loadingChat, setLoadingChat] = useState(false);
   const [actionNotice, setActionNotice] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -192,7 +205,7 @@ export default function InvestorDashboard() {
 
     const { data: requestRows } = await supabase
       .from("investment_requests")
-      .select("id, project_id, status, created_at")
+      .select("id, project_id, entrepreneur_id, status, created_at")
       .eq("investor_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -203,6 +216,7 @@ export default function InvestorDashboard() {
         project: projectMap.get(request.project_id) ?? "مشروع",
         status: request.status,
         date: formatDate(request.created_at),
+        entrepreneurId: request.entrepreneur_id,
       })),
     );
 
@@ -322,11 +336,78 @@ export default function InvestorDashboard() {
         project: project.name,
         status: data.status,
         date: formatDate(data.created_at),
+        entrepreneurId: project.entrepreneurId,
       },
       ...prev,
     ]);
 
     setActionNotice("تم إرسال طلب التواصل إلى رائد الأعمال بنجاح.");
+  };
+
+  const loadChatMessages = async (request: RequestItem) => {
+    if (!isSupabaseConfigured) return;
+
+    setSelectedRequestChat(request);
+    setLoadingChat(true);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select("id, sender_id, receiver_id, content, created_at")
+      .eq("request_id", request.id)
+      .order("created_at", { ascending: true });
+
+    setLoadingChat(false);
+
+    if (error) {
+      setChatMessages([]);
+      setActionNotice("لتفعيل الرسائل الحقيقية أنشئ جدول messages في قاعدة البيانات.");
+      return;
+    }
+
+    setChatMessages(
+      (data ?? []).map((item) => ({
+        id: item.id,
+        senderId: item.sender_id,
+        receiverId: item.receiver_id,
+        content: item.content,
+        createdAt: item.created_at,
+      })),
+    );
+  };
+
+  const sendChatMessage = async () => {
+    if (!isSupabaseConfigured || !currentUserId || !selectedRequestChat) return;
+
+    const message = chatInput.trim();
+    if (!message) return;
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        request_id: selectedRequestChat.id,
+        sender_id: currentUserId,
+        receiver_id: selectedRequestChat.entrepreneurId,
+        content: message,
+      })
+      .select("id, sender_id, receiver_id, content, created_at")
+      .single();
+
+    if (error || !data) {
+      setActionNotice("تعذر إرسال الرسالة. تأكد من وجود جدول messages وصلاحياته.");
+      return;
+    }
+
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: data.id,
+        senderId: data.sender_id,
+        receiverId: data.receiver_id,
+        content: data.content,
+        createdAt: data.created_at,
+      },
+    ]);
+    setChatInput("");
   };
 
   const deleteRequest = async (requestId: number) => {
@@ -675,12 +756,67 @@ export default function InvestorDashboard() {
                 <MessageCircle className="w-5 h-5 text-invest-teal" />
                 <h2 className="font-cairo font-bold text-xl">الرسائل</h2>
               </div>
-              {isVerified ? (
-                <p className="font-cairo text-dark-gray">سيتم تحميل الرسائل المرتبطة بطلباتك قريباً من قاعدة البيانات.</p>
-              ) : (
+
+              {!isVerified ? (
                 <p className="font-cairo text-invest-red bg-invest-red/10 border border-invest-red/20 rounded-lg p-3">
                   الرسائل غير متاحة قبل التوثيق.
                 </p>
+              ) : (
+                <div className="grid lg:grid-cols-3 gap-4">
+                  <div className="space-y-2 lg:col-span-1">
+                    {myRequests.map((request) => (
+                      <button
+                        key={request.id}
+                        onClick={() => loadChatMessages(request)}
+                        className={`w-full text-right p-3 rounded-xl border font-cairo text-sm ${
+                          selectedRequestChat?.id === request.id ? "border-invest-teal bg-invest-teal/5" : "border-light-gray hover:bg-light-gray"
+                        }`}
+                      >
+                        <p className="font-semibold">{request.project}</p>
+                        <p className="text-xs text-dark-gray mt-1">{request.status}</p>
+                      </button>
+                    ))}
+                    {myRequests.length === 0 && <p className="font-cairo text-sm text-dark-gray">لا توجد محادثات متاحة.</p>}
+                  </div>
+
+                  <div className="lg:col-span-2 border border-light-gray rounded-xl p-4 min-h-[320px] flex flex-col">
+                    {!selectedRequestChat ? (
+                      <p className="font-cairo text-dark-gray">اختر مشروعاً من القائمة لعرض المحادثة.</p>
+                    ) : (
+                      <>
+                        <p className="font-cairo font-bold mb-3">محادثة مشروع: {selectedRequestChat.project}</p>
+                        <div className="flex-1 space-y-2 overflow-y-auto mb-3">
+                          {loadingChat ? (
+                            <p className="font-cairo text-sm text-dark-gray">جاري تحميل الرسائل...</p>
+                          ) : chatMessages.length ? (
+                            chatMessages.map((msg) => (
+                              <div key={msg.id} className={`flex ${msg.senderId === currentUserId ? "justify-end" : "justify-start"}`}>
+                                <div className={`max-w-[80%] rounded-xl px-3 py-2 font-cairo text-sm ${msg.senderId === currentUserId ? "bg-invest-blue text-white" : "bg-light-gray text-text-dark"}`}>
+                                  {msg.content}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="font-cairo text-sm text-dark-gray">لا توجد رسائل بعد. ابدأ المحادثة الآن.</p>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2">
+                          <input
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
+                            placeholder="اكتب رسالتك..."
+                            className="flex-1 border border-light-gray rounded-lg px-4 py-2 font-cairo text-sm"
+                          />
+                          <button onClick={sendChatMessage} className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm">
+                            إرسال
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}
