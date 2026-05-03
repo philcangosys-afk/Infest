@@ -24,15 +24,23 @@ export default function LoginPage() {
       if (!user) return;
 
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-      if (profile?.role === "entrepreneur") {
-        navigate("/dashboard");
-      } else if (profile?.role === "investor") {
-        navigate("/investor-dashboard");
+      if (!profile?.role) return;
+
+      if (profile.role !== role) {
+        await supabase.auth.signOut();
+        setErrorMessage(
+          role === "entrepreneur"
+            ? "أنت مسجل حالياً كمستثمر. تم تسجيل الخروج، أدخل الآن بحساب رائد أعمال."
+            : "أنت مسجل حالياً كرائد أعمال. تم تسجيل الخروج، أدخل الآن بحساب مستثمر.",
+        );
+        return;
       }
+
+      navigate(profile.role === "entrepreneur" ? "/dashboard" : "/investor-dashboard");
     };
 
     checkSession();
-  }, [navigate]);
+  }, [navigate, role]);
 
   const handleLogin = async () => {
     setErrorMessage("");
