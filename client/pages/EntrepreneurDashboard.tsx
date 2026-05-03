@@ -95,7 +95,7 @@ export default function EntrepreneurDashboard() {
   });
 
   const uploadedFilesCount = Object.values(personalFiles).filter(Boolean).length;
-  const verificationPercent = Math.round((uploadedFilesCount / 3) * 100);
+  const verificationPercent = Math.round((uploadedFilesCount / 2) * 100);
   const isVerificationComplete = verificationPercent === 100;
   const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
     {
@@ -198,6 +198,40 @@ export default function EntrepreneurDashboard() {
       time: "14:45",
     },
   ]);
+
+  useEffect(() => {
+    const incomingRaw = localStorage.getItem("nile_invest_incoming_requests");
+    if (!incomingRaw) return;
+
+    const incoming = JSON.parse(incomingRaw) as {
+      id: number;
+      investorName: string;
+      badge: string;
+      projectName: string;
+      message: string;
+      date: string;
+      time: string;
+    }[];
+
+    if (!incoming.length) return;
+
+    setRequests((prev) => {
+      const prevIds = new Set(prev.map((item) => item.id));
+      const uniqueIncoming = incoming.filter((item) => !prevIds.has(item.id));
+      return [...uniqueIncoming, ...prev];
+    });
+  }, []);
+
+  const removeIncomingRequestFromStorage = (requestId: number) => {
+    const incomingRaw = localStorage.getItem("nile_invest_incoming_requests");
+    if (!incomingRaw) return;
+
+    const incoming = JSON.parse(incomingRaw) as { id: number }[];
+    localStorage.setItem(
+      "nile_invest_incoming_requests",
+      JSON.stringify(incoming.filter((item) => item.id !== requestId)),
+    );
+  };
 
   const messages = [
     { id: 1, name: "محمد صلاح", text: "أحتاج مزيد من التفاصيل المالية", time: "10:24" },
@@ -539,11 +573,17 @@ export default function EntrepreneurDashboard() {
                     <p className="font-cairo text-sm text-dark-gray mb-3">{request.message}</p>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setRequests((prev) => prev.filter((item) => item.id !== request.id))}
+                        onClick={() => {
+                          setRequests((prev) => prev.filter((item) => item.id !== request.id));
+                          removeIncomingRequestFromStorage(request.id);
+                        }}
                         className="px-4 py-2 bg-invest-green text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
                       ><CheckCircle className="w-4 h-4" /> قبول</button>
                       <button
-                        onClick={() => setRequests((prev) => prev.filter((item) => item.id !== request.id))}
+                        onClick={() => {
+                          setRequests((prev) => prev.filter((item) => item.id !== request.id));
+                          removeIncomingRequestFromStorage(request.id);
+                        }}
                         className="px-4 py-2 bg-invest-red text-white rounded-lg font-cairo text-sm inline-flex items-center gap-1"
                       ><XCircle className="w-4 h-4" /> رفض</button>
                     </div>

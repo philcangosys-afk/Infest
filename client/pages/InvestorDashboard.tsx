@@ -37,8 +37,9 @@ export default function InvestorDashboard() {
     { id: 1, project: "منصة التعليم الذكي", status: "قيد المراجعة", date: "2024/05/20" },
     { id: 2, project: "نمو الزراعة", status: "تم الرد", date: "2024/05/18" },
   ]);
+  const [actionNotice, setActionNotice] = useState("");
 
-  const [kycComplete, setKycComplete] = useState(false);
+  const [kycComplete, setKycComplete] = useState(true);
   const [profileDataComplete, setProfileDataComplete] = useState(true);
   const isVerified = kycComplete && profileDataComplete;
   const profileCompletion = (kycComplete ? 50 : 0) + (profileDataComplete ? 50 : 0);
@@ -80,6 +81,50 @@ export default function InvestorDashboard() {
   });
 
   const favoriteProjects = projects.filter((project) => favoriteIds.includes(project.id));
+
+  const sendContactRequest = (project: Project) => {
+    if (!isVerified) {
+      setActionNotice("لا يمكن إرسال طلب التواصل قبل اكتمال التوثيق.");
+      return;
+    }
+
+    const requestDate = new Date().toISOString().slice(0, 10).replace(/-/g, "/");
+    const newRequest = {
+      id: Date.now(),
+      project: project.name,
+      status: "تم الإرسال",
+      date: requestDate,
+    };
+
+    setMyRequests((prev) => [newRequest, ...prev]);
+
+    const incomingRaw = localStorage.getItem("nile_invest_incoming_requests");
+    const incoming = incomingRaw
+      ? (JSON.parse(incomingRaw) as {
+          id: number;
+          investorName: string;
+          badge: string;
+          projectName: string;
+          message: string;
+          date: string;
+          time: string;
+        }[])
+      : [];
+
+    const now = new Date();
+    const incomingRequest = {
+      id: newRequest.id,
+      investorName: "زين العابدين",
+      badge: "مستثمر معتمد",
+      projectName: project.name,
+      message: `طلب تواصل جديد بخصوص مشروع ${project.name}`,
+      date: requestDate,
+      time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+    };
+
+    localStorage.setItem("nile_invest_incoming_requests", JSON.stringify([incomingRequest, ...incoming]));
+    setActionNotice("تم إرسال طلب التواصل إلى رائد الأعمال بنجاح.");
+  };
 
   const nav = useMemo(
     () => [
@@ -250,6 +295,12 @@ export default function InvestorDashboard() {
                 </select>
               </div>
 
+              {!!actionNotice && (
+                <div className="font-cairo text-sm bg-invest-teal/10 text-invest-blue border border-invest-teal/30 rounded-lg p-3">
+                  {actionNotice}
+                </div>
+              )}
+
               <div className="space-y-3">
                 {filteredProjects.map((project) => {
                   const isFav = favoriteIds.includes(project.id);
@@ -269,19 +320,31 @@ export default function InvestorDashboard() {
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center justify-between mt-3 gap-2">
                         <p className="font-cairo text-sm text-dark-gray">{project.amount}</p>
-                        <button
-                          onClick={() => setSelectedProject(project)}
-                          disabled={!isVerified}
-                          className={`px-4 py-2 rounded-lg font-cairo text-sm ${
-                            isVerified
-                              ? "bg-invest-blue text-white hover:bg-blue-900"
-                              : "bg-light-gray text-dark-gray cursor-not-allowed"
-                          }`}
-                        >
-                          عرض التفاصيل
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => sendContactRequest(project)}
+                            className={`px-3 py-2 rounded-lg font-cairo text-xs ${
+                              isVerified
+                                ? "border border-invest-teal text-invest-teal hover:bg-invest-teal/10"
+                                : "border border-light-gray text-dark-gray cursor-not-allowed"
+                            }`}
+                          >
+                            طلب تواصل
+                          </button>
+                          <button
+                            onClick={() => setSelectedProject(project)}
+                            disabled={!isVerified}
+                            className={`px-4 py-2 rounded-lg font-cairo text-sm ${
+                              isVerified
+                                ? "bg-invest-blue text-white hover:bg-blue-900"
+                                : "bg-light-gray text-dark-gray cursor-not-allowed"
+                            }`}
+                          >
+                            عرض التفاصيل
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -453,6 +516,16 @@ export default function InvestorDashboard() {
                   <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">المرحلة: {selectedProject.stage}</div>
                   <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">الميزانية: {selectedProject.amount}</div>
                 </div>
+                <button
+                  onClick={() => sendContactRequest(selectedProject)}
+                  className={`mt-4 px-5 py-2.5 rounded-lg font-cairo font-semibold ${
+                    isVerified
+                      ? "bg-invest-teal text-white hover:bg-emerald-600"
+                      : "bg-light-gray text-dark-gray cursor-not-allowed"
+                  }`}
+                >
+                  طلب تواصل مع رائد الأعمال
+                </button>
               </div>
             </div>
           )}
