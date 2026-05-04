@@ -55,6 +55,12 @@ type ProfileForm = {
   linkedinUrl: string;
 };
 
+type InvestorKycDraft = {
+  documentName: string;
+  documentType: "passport" | "national_id";
+  status: "ready_to_submit" | "under_review";
+};
+
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
@@ -63,6 +69,8 @@ const formatDate = (iso: string) => {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}/${m}/${day}`;
 };
+
+const getInvestorKycStorageKey = (userId: string) => `investor_kyc_draft_${userId}`;
 
 export default function InvestorDashboard() {
   const navigate = useNavigate();
@@ -165,8 +173,29 @@ export default function InvestorDashboard() {
 
     const isKycComplete = Boolean(profile.kyc_complete);
     setKycComplete(isKycComplete);
-    setKycStatus(isKycComplete ? "approved" : "not_uploaded");
-    setKycDocumentName(isKycComplete ? "مستند مرفوع مسبقاً" : "");
+
+    if (isKycComplete) {
+      setKycStatus("approved");
+      setKycDocumentName("مستند مرفوع مسبقاً");
+    } else {
+      const draftRaw = localStorage.getItem(getInvestorKycStorageKey(user.id));
+      if (draftRaw) {
+        try {
+          const draft = JSON.parse(draftRaw) as InvestorKycDraft;
+          setKycDocumentName(draft.documentName || "");
+          setKycDocumentType(draft.documentType === "passport" ? "passport" : "national_id");
+          setKycStatus(draft.status || "ready_to_submit");
+        } catch {
+          localStorage.removeItem(getInvestorKycStorageKey(user.id));
+          setKycStatus("not_uploaded");
+          setKycDocumentName("");
+        }
+      } else {
+        setKycStatus("not_uploaded");
+        setKycDocumentName("");
+      }
+    }
+
     setProfileDataComplete(Boolean(profile.profile_data_complete));
 
     const { data: projectsRows, error: projectsError } = await supabase
@@ -287,7 +316,7 @@ export default function InvestorDashboard() {
     setKycDocumentName(file.name);
     setKycComplete(false);
     setKycStatus("ready_to_submit");
-    setActionNotice("تم رفع المستند. اضغط إرسال للمراجعة.");
+    setActionNotice("تم اختيار المستند. اضغط تحديث الملف الشخصي لحفظه.");
   };
 
   const submitKycForReview = () => {
@@ -300,6 +329,9 @@ export default function InvestorDashboard() {
   const approveKycByAdmin = () => {
     setKycStatus("approved");
     setKycComplete(true);
+    if (currentUserId) {
+      localStorage.removeItem(getInvestorKycStorageKey(currentUserId));
+    }
     setActionNotice("تمت الموافقة على مستند KYC من لجنة التحقق.");
   };
 
@@ -459,6 +491,9 @@ export default function InvestorDashboard() {
     if (!currentUserId) return;
     setSavingProfile(true);
 
+    const nextKycStatus =
+      kycStatus === "approved" ? "approved" : kycDocumentName ? "under_review" : "not_uploaded";
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -468,7 +503,7 @@ export default function InvestorDashboard() {
         address: profileForm.address,
         investor_type: profileForm.investorType,
         linkedin_url: profileForm.linkedinUrl,
-        kyc_complete: kycStatus === "approved",
+        kyc_complete: nextKycStatus === "approved",
         profile_data_complete: profileDataComplete,
       })
       .eq("id", currentUserId);
@@ -480,7 +515,27 @@ export default function InvestorDashboard() {
       return;
     }
 
-    setActionNotice("تم تحديث الملف الشخصي بنجاح.");
+    setKycStatus(nextKycStatus);
+    setKycComplete(nextKycStatus === "approved");
+
+    if (nextKycStatus === "approved") {
+      localStorage.removeItem(getInvestorKycStorageKey(currentUserId));
+    } else if (kycDocumentName) {
+      localStorage.setItem(
+        getInvestorKycStorageKey(currentUserId),
+        JSON.stringify({
+          documentName: kycDocumentName,
+          documentType: kycDocumentType,
+          status: nextKycStatus,
+        } satisfies InvestorKycDraft),
+      );
+    }
+
+    setActionNotice(
+      nextKycStatus === "under_review"
+        ? "تم تحديث الملف الشخصي وحفظ مستند KYC، والحالة الآن: تحت المراجعة."
+        : "تم تحديث الملف الشخصي بنجاح.",
+    );
   };
 
   const updatePassword = async () => {
