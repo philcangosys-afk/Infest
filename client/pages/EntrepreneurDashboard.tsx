@@ -120,6 +120,13 @@ export default function EntrepreneurDashboard() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [pendingPersonalFiles, setPendingPersonalFiles] = useState<{
+    nationalId: File | null;
+    personalPhoto: File | null;
+  }>({
+    nationalId: null,
+    personalPhoto: null,
+  });
 
   const uploadedFilesCount = Object.values(personalFiles).filter(Boolean).length;
   const verificationPercent = 50 + Math.round((uploadedFilesCount / 2) * 50);
@@ -178,6 +185,7 @@ export default function EntrepreneurDashboard() {
       nationalId: Boolean(profile.national_id_uploaded),
       personalPhoto: Boolean(profile.personal_photo_uploaded),
     });
+    setPendingPersonalFiles({ nationalId: null, personalPhoto: null });
 
     const { data: projectRows, error: projectsError } = await supabase
       .from("projects")
@@ -426,6 +434,13 @@ export default function EntrepreneurDashboard() {
     if (!currentUserId) return;
     setSavingProfile(true);
 
+    const nextPersonalFiles = {
+      nationalId: personalFiles.nationalId || Boolean(pendingPersonalFiles.nationalId),
+      personalPhoto: personalFiles.personalPhoto || Boolean(pendingPersonalFiles.personalPhoto),
+    };
+
+    const nextUploadedFilesCount = Object.values(nextPersonalFiles).filter(Boolean).length;
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -434,9 +449,9 @@ export default function EntrepreneurDashboard() {
         city: profileForm.city,
         main_sector: profileForm.mainSector,
         project_stage: profileForm.projectStage,
-        national_id_uploaded: personalFiles.nationalId,
-        personal_photo_uploaded: personalFiles.personalPhoto,
-        kyc_complete: isVerificationComplete,
+        national_id_uploaded: nextPersonalFiles.nationalId,
+        personal_photo_uploaded: nextPersonalFiles.personalPhoto,
+        kyc_complete: nextUploadedFilesCount === 2,
       })
       .eq("id", currentUserId);
 
@@ -447,6 +462,8 @@ export default function EntrepreneurDashboard() {
       return;
     }
 
+    setPersonalFiles(nextPersonalFiles);
+    setPendingPersonalFiles({ nationalId: null, personalPhoto: null });
     setActionNotice("تم تحديث الملف الشخصي بنجاح.");
   };
 
@@ -871,7 +888,7 @@ export default function EntrepreneurDashboard() {
                 <p className="font-cairo text-xs text-dark-gray mt-2">
                   {isVerificationComplete
                     ? "الملف مكتمل 100%: 50% بيانات أساسية + 50% بعد رفع الهوية والصورة."
-                    : "50% تمثل البيانات الأساسية، و50% المتبقية تكتمل بعد رفع الهوية الوطنية والصورة الشخصية."}
+                    : "50% تمثل البيانات الأساسية، و50% المتبقية تكتمل بعد رفع الهوية الوطنية والصورة الشخصية ثم الضغط على تحديث الملف الشخصي للحفظ."}
                 </p>
                 {isVerificationComplete && (
                   <span className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-invest-teal/10 text-invest-teal font-cairo text-xs font-bold">
@@ -886,19 +903,40 @@ export default function EntrepreneurDashboard() {
                 {[
                   { key: "nationalId" as const, label: "رفع الهوية الوطنية" },
                   { key: "personalPhoto" as const, label: "رفع الصورة الشخصية" },
-                ].map((file) => (
-                  <div key={file.key} className="flex items-center justify-between border border-light-gray rounded-lg px-3 py-2.5">
-                    <p className="font-cairo text-sm text-text-dark">{file.label}</p>
-                    <button
-                      onClick={() => setPersonalFiles((prev) => ({ ...prev, [file.key]: !prev[file.key] }))}
-                      className={`px-3 py-1.5 rounded-lg font-cairo text-xs font-bold transition ${
-                        personalFiles[file.key] ? "bg-invest-green text-white" : "bg-invest-blue text-white hover:bg-blue-900"
-                      }`}
-                    >
-                      {personalFiles[file.key] ? "تم الرفع" : "رفع الملف"}
-                    </button>
-                  </div>
-                ))}
+                ].map((file) => {
+                  const saved = personalFiles[file.key];
+                  const pendingFile = pendingPersonalFiles[file.key];
+
+                  return (
+                    <div key={file.key} className="flex flex-wrap items-center justify-between gap-3 border border-light-gray rounded-lg px-3 py-2.5">
+                      <div>
+                        <p className="font-cairo text-sm text-text-dark">{file.label}</p>
+                        {pendingFile && <p className="font-cairo text-xs text-dark-gray mt-1">ملف جاهز للحفظ: {pendingFile.name}</p>}
+                      </div>
+
+                      <label
+                        className={`px-3 py-1.5 rounded-lg font-cairo text-xs font-bold transition cursor-pointer ${
+                          saved
+                            ? "bg-invest-green text-white"
+                            : pendingFile
+                              ? "bg-amber-500 text-white"
+                              : "bg-invest-blue text-white hover:bg-blue-900"
+                        }`}
+                      >
+                        {saved ? "تم الحفظ" : pendingFile ? "جاهز للحفظ" : "رفع الملف"}
+                        <input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          className="hidden"
+                          onChange={(e) => {
+                            const pickedFile = e.target.files?.[0] ?? null;
+                            setPendingPersonalFiles((prev) => ({ ...prev, [file.key]: pickedFile }));
+                          }}
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
