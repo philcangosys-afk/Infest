@@ -621,16 +621,12 @@ export default function EntrepreneurDashboard() {
                   {[
                     { key: "pitch", label: "تحسين عرض المشروع" },
                     { key: "financial", label: "خطة مالية أولية" },
-                    { key: "requests", label: "الرد على المستثمرين" },
+                    { key: "responses", label: "الرد على المستثمرين" },
                   ].map((option) => (
                     <button
                       key={option.key}
-                      onClick={() => setAdvisorMode(option.key as "pitch" | "financial" | "requests")}
-                      className={`px-4 py-2.5 rounded-xl border font-cairo text-sm font-semibold transition ${
-                        advisorMode === option.key
-                          ? "bg-invest-blue text-white border-invest-blue"
-                          : "bg-white text-dark-gray border-light-gray hover:border-invest-teal hover:text-invest-teal"
-                      }`}
+                      onClick={() => navigate(`/ai-service/entrepreneur/${option.key}`)}
+                      className="px-4 py-2.5 rounded-xl border font-cairo text-sm font-semibold transition bg-white text-dark-gray border-light-gray hover:border-invest-teal hover:text-invest-teal"
                     >
                       {option.label}
                     </button>

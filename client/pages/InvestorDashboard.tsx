@@ -607,23 +607,21 @@ export default function InvestorDashboard() {
                   </span>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid md:grid-cols-3 gap-3">
                   {[
-                    "تحليل جدوى مشروع",
-                    "خدمة Matching بين المستثمر والمشروع",
-                    "تقييم مخاطر الاستثمار",
-                    "حساب العائد المتوقع",
-                  ].map((service) => (
-                    <button key={service} className="border border-light-gray rounded-xl p-4 text-right hover:border-invest-teal hover:bg-light-gray transition">
-                      <p className="font-cairo font-semibold text-sm text-text-dark">{service}</p>
+                    { title: "تحليل جدوى مشروع", key: "feasibility" },
+                    { title: "تقييم مخاطر الاستثمار", key: "risk" },
+                    { title: "حساب العائد المتوقع", key: "returns" },
+                  ].map((serviceItem) => (
+                    <button
+                      key={serviceItem.key}
+                      onClick={() => navigate(`/ai-service/investor/${serviceItem.key}`)}
+                      className="border border-light-gray rounded-xl p-4 text-right hover:border-invest-teal hover:bg-light-gray transition"
+                    >
+                      <p className="font-cairo font-semibold text-sm text-text-dark">{serviceItem.title}</p>
                       <p className="font-cairo text-xs text-dark-gray mt-1">خدمة مدفوعة</p>
                     </button>
                   ))}
-                </div>
-
-                <div className="mt-4 p-4 rounded-xl bg-invest-blue text-white flex items-center justify-between gap-3 flex-wrap">
-                  <p className="font-cairo text-sm">خدمة إرشاد استثماري مدفوع مع مستشار خبير لمدة 45 دقيقة.</p>
-                  <button className="px-4 py-2 rounded-lg bg-white text-invest-blue font-cairo font-bold text-sm">حجز جلسة Mentoring</button>
                 </div>
               </div>
             </>
