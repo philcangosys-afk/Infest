@@ -27,6 +27,45 @@ const getServiceTitle = (role: AdvisorRole, service: string) => {
   return "خدمة مستشار ذكي";
 };
 
+const getServiceGuidance = (role: AdvisorRole, service: string) => {
+  if (role === "investor" && service === "feasibility") {
+    return [
+      "المطلوب هو مراجعة شاملة للمشروع من منظور المستثمر وليس إجابة عامة.",
+      "قدّم النتيجة بهذه العناوين وبالترتيب:",
+      "1) ملخص تنفيذي واضح للمشروع وفكرته وقيمته الاستثمارية.",
+      "2) الفائدة المتوقعة للمستثمر (مصادر الربح وفرص النمو).",
+      "3) نقاط القوة.",
+      "4) نقاط الضعف.",
+      "5) البيئة المحيطة (السوق، المنافسة، العوامل التنظيمية/القانونية، التوريد والتشغيل).",
+      "6) النواقص في الدراسة الحالية (البيانات أو الافتراضات غير الموجودة).",
+      "7) قرار مبدئي: مناسب/بحاجة تحسين/غير مناسب مع سبب مختصر.",
+      "إذا كانت البيانات ناقصة، لا تخترع معلومات. اذكر النقص صراحة كقائمة تحقق مطلوبة قبل قرار الاستثمار.",
+    ].join("\n");
+  }
+
+  if (role === "investor" && service === "risk") {
+    return "ركّز على المخاطر التشغيلية والمالية والسوقية والقانونية، مع درجة خطورة لكل بند وخطة تخفيف عملية.";
+  }
+
+  if (role === "investor" && service === "returns") {
+    return "قدّم تصوراً واضحاً للعائد المتوقع وفق سيناريو متحفظ وسيناريو مرجح، مع توضيح الافتراضات والنواقص المؤثرة على دقة التقدير.";
+  }
+
+  if (role === "entrepreneur" && service === "pitch") {
+    return "أعد صياغة عرض المشروع بشكل إقناعي للمستثمرين مع تحسين المشكلة، الحل، السوق، الميزة التنافسية، ونموذج الربح.";
+  }
+
+  if (role === "entrepreneur" && service === "financial") {
+    return "ابنِ إطار خطة مالية أولية: التكاليف، الإيرادات، نقطة التعادل، التدفق النقدي، والافتراضات الأساسية بشكل عملي.";
+  }
+
+  if (role === "entrepreneur" && service === "responses") {
+    return "قدّم ردوداً احترافية مختصرة على أسئلة المستثمرين الصعبة مع لغة مقنعة وشفافة.";
+  }
+
+  return "قدّم إجابة عملية دقيقة ومباشرة.";
+};
+
 export const handleAiAdvisor: RequestHandler = async (req, res) => {
   const incomingBody = req.body as unknown;
 
@@ -73,6 +112,7 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
   }
 
   const serviceTitle = getServiceTitle(role, service);
+  const serviceGuidance = getServiceGuidance(role, service);
   const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
 
   const systemPrompt =
@@ -87,7 +127,8 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
     body.projectSummary ? `ملخص المشروع:\n${body.projectSummary}` : "لا يوجد ملخص مشروع.",
     body.previousAnalysis ? `نتيجة تحليل سابقة:\n${body.previousAnalysis}` : "",
     body.question ? `سؤال المستخدم:\n${body.question}` : "",
-    "قدّم إجابة عملية مع توصيات قابلة للتنفيذ وخطوات لاحقة واضحة.",
+    `تعليمات أسلوب التحليل:\n${serviceGuidance}`,
+    "اختم بخطوات عملية تالية قابلة للتنفيذ.",
   ]
     .filter(Boolean)
     .join("\n\n");
