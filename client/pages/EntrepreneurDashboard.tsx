@@ -79,16 +79,7 @@ const formatTime = (iso: string) => {
 export default function EntrepreneurDashboard() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SectionKey>("dashboard");
-  const [advisorMode, setAdvisorMode] = useState<"pitch" | "financial" | "requests">("pitch");
-  const [advisorInput, setAdvisorInput] = useState("");
   const [selectedAdvisorProject, setSelectedAdvisorProject] = useState("");
-  const [advisorChat, setAdvisorChat] = useState<{ id: number; role: "assistant" | "user"; text: string }[]>([
-    {
-      id: 1,
-      role: "assistant",
-      text: "مرحبًا، أنا مستشارك الذكي. اكتب سؤالك عن التمويل أو العرض التقديمي وسأساعدك مباشرة.",
-    },
-  ]);
 
   const [projects, setProjects] = useState<EntrepreneurProject[]>([]);
   const [requests, setRequests] = useState<InvestorRequest[]>([]);
@@ -453,25 +444,6 @@ export default function EntrepreneurDashboard() {
     setActionNotice("تم تحديث الملف الشخصي بنجاح.");
   };
 
-  const sendAdvisorMessage = () => {
-    const message = advisorInput.trim();
-    if (!message) return;
-
-    const modeReply =
-      advisorMode === "pitch"
-        ? `اقتراحي لمشروع ${selectedAdvisorProject}: ابدأ شرحك بالمشكلة ثم الحل ثم الأرقام الأساسية (حجم السوق، عدد العملاء، والإيراد الشهري).`
-        : advisorMode === "financial"
-          ? `اقتراحي المالي لمشروع ${selectedAdvisorProject}: قسّم المبلغ على تطوير المنتج، التسويق، والتشغيل مع هدف واضح لكل بند.`
-          : `اقتراحي للرد بخصوص مشروع ${selectedAdvisorProject}: استخدم رد مختصر يوضح الوضع الحالي والخطوة التالية وموعد اجتماع مقترح.`;
-
-    setAdvisorChat((prev) => [
-      ...prev,
-      { id: prev.length + 1, role: "user" as const, text: message },
-      { id: prev.length + 2, role: "assistant" as const, text: modeReply },
-    ]);
-    setAdvisorInput("");
-  };
-
   const sidebarItems = useMemo(
     () => [
       { key: "dashboard" as const, icon: "📊", label: "لوحة التحكم" },
@@ -632,38 +604,6 @@ export default function EntrepreneurDashboard() {
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-xl border border-light-gray overflow-hidden">
-                  <div className="bg-light-gray/60 px-4 py-3 border-b border-light-gray">
-                    <p className="font-cairo text-sm font-bold text-text-dark">الدردشة مع المستشار الذكي</p>
-                  </div>
-
-                  <div className="p-4 space-y-3 max-h-64 overflow-y-auto bg-white">
-                    {advisorChat.map((msg) => (
-                      <div key={msg.id} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
-                        <div
-                          className={`max-w-[85%] rounded-xl px-4 py-2.5 font-cairo text-sm leading-7 ${
-                            msg.role === "assistant" ? "bg-light-gray text-text-dark" : "bg-invest-blue text-white"
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 border-t border-light-gray bg-white flex gap-2">
-                    <button onClick={sendAdvisorMessage} className="px-4 py-2 rounded-lg bg-invest-teal text-white font-cairo text-sm font-bold hover:bg-emerald-600 transition">
-                      إرسال
-                    </button>
-                    <input
-                      value={advisorInput}
-                      onChange={(e) => setAdvisorInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && sendAdvisorMessage()}
-                      placeholder="اكتب سؤالك للمستشار الذكي..."
-                      className="flex-1 border border-light-gray rounded-lg px-4 py-2 font-cairo text-sm focus:outline-none focus:border-invest-teal"
-                    />
-                  </div>
-                </div>
               </div>
             </>
           )}
