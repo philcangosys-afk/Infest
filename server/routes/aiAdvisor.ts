@@ -28,7 +28,34 @@ const getServiceTitle = (role: AdvisorRole, service: string) => {
 };
 
 export const handleAiAdvisor: RequestHandler = async (req, res) => {
-  const body = req.body as AdvisorRequestBody;
+  const incomingBody = req.body as unknown;
+
+  let body: AdvisorRequestBody = {};
+
+  try {
+    if (Buffer.isBuffer(incomingBody)) {
+      body = JSON.parse(incomingBody.toString("utf8")) as AdvisorRequestBody;
+    } else if (
+      incomingBody &&
+      typeof incomingBody === "object" &&
+      "type" in incomingBody &&
+      "data" in incomingBody &&
+      (incomingBody as { type?: string }).type === "Buffer" &&
+      Array.isArray((incomingBody as { data?: unknown }).data)
+    ) {
+      body = JSON.parse(
+        Buffer.from((incomingBody as { data: number[] }).data).toString("utf8"),
+      ) as AdvisorRequestBody;
+    } else if (typeof incomingBody === "string") {
+      body = JSON.parse(incomingBody) as AdvisorRequestBody;
+    } else if (incomingBody && typeof incomingBody === "object") {
+      body = incomingBody as AdvisorRequestBody;
+    }
+  } catch {
+    res.status(400).json({ error: "Invalid JSON body" });
+    return;
+  }
+
   const role = body.role;
   const service = body.service;
 
