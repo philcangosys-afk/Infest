@@ -81,6 +81,12 @@ export default function InvestorDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [profileForm, setProfileForm] = useState<ProfileForm>({
     fullName: "",
     email: "",
@@ -475,6 +481,62 @@ export default function InvestorDashboard() {
     }
 
     setActionNotice("تم تحديث الملف الشخصي بنجاح.");
+  };
+
+  const updatePassword = async () => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+
+    const currentPassword = passwordForm.currentPassword.trim();
+    const newPassword = passwordForm.newPassword.trim();
+    const confirmPassword = passwordForm.confirmPassword.trim();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setActionNotice("يرجى تعبئة جميع حقول كلمة المرور.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setActionNotice("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setActionNotice("تأكيد كلمة المرور غير مطابق.");
+      return;
+    }
+
+    if (!profileForm.email) {
+      setActionNotice("تعذر التحقق من البريد الإلكتروني للحساب.");
+      return;
+    }
+
+    setSavingPassword(true);
+
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: profileForm.email,
+      password: currentPassword,
+    });
+
+    if (reauthError) {
+      setSavingPassword(false);
+      setActionNotice("كلمة المرور الحالية غير صحيحة.");
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+
+    setSavingPassword(false);
+
+    if (updateError) {
+      setActionNotice("تعذر تحديث كلمة المرور.");
+      return;
+    }
+
+    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setActionNotice("تم تحديث كلمة المرور بنجاح.");
   };
 
   const nav = useMemo(
@@ -976,11 +1038,35 @@ export default function InvestorDashboard() {
               <div className="border border-light-gray rounded-xl p-4 space-y-4">
                 <h3 className="font-cairo font-bold text-text-dark">تغيير كلمة المرور</h3>
                 <div className="grid md:grid-cols-3 gap-3">
-                  <input type="password" placeholder="كلمة المرور الحالية" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm" />
-                  <input type="password" placeholder="كلمة المرور الجديدة" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm" />
-                  <input type="password" placeholder="تأكيد كلمة المرور" className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm" />
+                  <input
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+                    placeholder="كلمة المرور الحالية"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm"
+                  />
+                  <input
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                    placeholder="كلمة المرور الجديدة"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm"
+                  />
+                  <input
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    placeholder="تأكيد كلمة المرور"
+                    className="border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm"
+                  />
                 </div>
-                <button className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold">تحديث كلمة المرور</button>
+                <button
+                  onClick={updatePassword}
+                  disabled={savingPassword}
+                  className="px-5 py-2.5 bg-invest-blue text-white rounded-lg font-cairo font-semibold disabled:opacity-60"
+                >
+                  {savingPassword ? "جاري تحديث كلمة المرور..." : "تحديث كلمة المرور"}
+                </button>
               </div>
             </div>
           )}
