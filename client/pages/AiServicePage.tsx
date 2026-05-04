@@ -1,5 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 type Role = "investor" | "entrepreneur";
 
@@ -58,6 +60,7 @@ export default function AiServicePage() {
   const [followupHistory, setFollowupHistory] = useState<FollowupItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const analysisCardRef = useRef<HTMLDivElement | null>(null);
 
   if (!serviceConfig) {
     return (
@@ -107,11 +110,11 @@ export default function AiServicePage() {
       }
 
       const nextResult = data.result || "لا توجد نتيجة حالياً.";
-      setAnalysisResult(nextResult);
 
       if (question) {
         setFollowupHistory((prev) => [...prev, { question, answer: nextResult }]);
       } else {
+        setAnalysisResult(nextResult);
         setFollowupHistory([]);
       }
 
@@ -122,6 +125,39 @@ export default function AiServicePage() {
       setLoading(false);
       return false;
     }
+  };
+
+  const downloadAnalysisPdf = async () => {
+    if (!analysisCardRef.current) return;
+
+    const canvas = await html2canvas(analysisCardRef.current, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+    });
+
+    const image = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imageProps = pdf.getImageProperties(image);
+    const imageWidth = pageWidth;
+    const imageHeight = (imageProps.height * imageWidth) / imageProps.width;
+
+    let remainingHeight = imageHeight;
+    let position = 0;
+
+    pdf.addImage(image, "PNG", 0, position, imageWidth, imageHeight);
+    remainingHeight -= pageHeight;
+
+    while (remainingHeight > 0) {
+      position = remainingHeight - imageHeight;
+      pdf.addPage();
+      pdf.addImage(image, "PNG", 0, position, imageWidth, imageHeight);
+      remainingHeight -= pageHeight;
+    }
+
+    pdf.save("analysis-report.pdf");
   };
 
   return (
@@ -177,8 +213,16 @@ export default function AiServicePage() {
         </div>
 
         {analysisResult && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-light-gray space-y-4">
-            <h2 className="font-cairo font-bold text-xl text-text-dark">نتيجة التحليل</h2>
+          <div ref={analysisCardRef} className="bg-white rounded-2xl p-6 shadow-lg border border-light-gray space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-cairo font-bold text-xl text-text-dark">نتيجة التحليل</h2>
+              <button
+                onClick={downloadAnalysisPdf}
+                className="px-4 py-2 rounded-lg border border-invest-blue text-invest-blue font-cairo text-sm hover:bg-invest-blue hover:text-white transition"
+              >
+                تحميل PDF للتحليل
+              </button>
+            </div>
             <div className="font-cairo text-sm text-dark-gray whitespace-pre-wrap leading-7">{analysisResult}</div>
 
             <div className="pt-2 border-t border-light-gray space-y-3">
@@ -201,7 +245,7 @@ export default function AiServicePage() {
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <input
                   value={followupQuestion}
                   onChange={(e) => setFollowupQuestion(e.target.value)}
@@ -218,7 +262,7 @@ export default function AiServicePage() {
                     }
                   }}
                   disabled={loading}
-                  className="px-4 py-2.5 rounded-lg bg-invest-teal text-white font-cairo text-sm disabled:opacity-60"
+                  className="px-4 py-2.5 rounded-lg bg-invest-teal text-white font-cairo text-sm disabled:opacity-60 self-start"
                 >
                   إرسال
                 </button>
