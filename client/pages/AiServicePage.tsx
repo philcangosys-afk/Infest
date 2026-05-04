@@ -8,6 +8,11 @@ type ServiceConfig = {
   subtitle: string;
 };
 
+type FollowupItem = {
+  question: string;
+  answer: string;
+};
+
 const CONFIG: Record<Role, Record<string, ServiceConfig>> = {
   investor: {
     feasibility: {
@@ -50,6 +55,7 @@ export default function AiServicePage() {
   const [projectSummary, setProjectSummary] = useState("");
   const [analysisResult, setAnalysisResult] = useState("");
   const [followupQuestion, setFollowupQuestion] = useState("");
+  const [followupHistory, setFollowupHistory] = useState<FollowupItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -72,7 +78,7 @@ export default function AiServicePage() {
   const runAnalysis = async (question?: string) => {
     if (!pdfFile) {
       setErrorMessage("يرجى رفع ملف PDF أولاً.");
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -97,14 +103,24 @@ export default function AiServicePage() {
       if (!response.ok) {
         setErrorMessage(data.error || "تعذر تنفيذ التحليل الآن.");
         setLoading(false);
-        return;
+        return false;
       }
 
-      setAnalysisResult(data.result || "لا توجد نتيجة حالياً.");
+      const nextResult = data.result || "لا توجد نتيجة حالياً.";
+      setAnalysisResult(nextResult);
+
+      if (question) {
+        setFollowupHistory((prev) => [...prev, { question, answer: nextResult }]);
+      } else {
+        setFollowupHistory([]);
+      }
+
       setLoading(false);
+      return true;
     } catch {
       setErrorMessage("تعذر الاتصال بخدمة الذكاء الاصطناعي.");
       setLoading(false);
+      return false;
     }
   };
 
@@ -165,8 +181,26 @@ export default function AiServicePage() {
             <h2 className="font-cairo font-bold text-xl text-text-dark">نتيجة التحليل</h2>
             <div className="font-cairo text-sm text-dark-gray whitespace-pre-wrap leading-7">{analysisResult}</div>
 
-            <div className="pt-2 border-t border-light-gray">
-              <p className="font-cairo text-sm font-bold text-text-dark mb-2">استفسار إضافي حول التحليل</p>
+            <div className="pt-2 border-t border-light-gray space-y-3">
+              <p className="font-cairo text-sm font-bold text-text-dark">استفسار إضافي حول التحليل</p>
+
+              {followupHistory.length > 0 && (
+                <div className="space-y-3">
+                  {followupHistory.map((item, index) => (
+                    <div key={`${item.question}-${index}`} className="space-y-2 rounded-xl border border-light-gray p-3">
+                      <div>
+                        <p className="font-cairo text-xs text-invest-blue font-bold mb-1">سؤالك</p>
+                        <p className="font-cairo text-sm text-text-dark whitespace-pre-wrap">{item.question}</p>
+                      </div>
+                      <div>
+                        <p className="font-cairo text-xs text-invest-teal font-bold mb-1">رد المستشار</p>
+                        <p className="font-cairo text-sm text-dark-gray whitespace-pre-wrap leading-7">{item.answer}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <input
                   value={followupQuestion}
@@ -175,10 +209,13 @@ export default function AiServicePage() {
                   className="flex-1 border border-light-gray rounded-lg px-4 py-2.5 font-cairo text-sm"
                 />
                 <button
-                  onClick={() => {
-                    if (!followupQuestion.trim()) return;
-                    runAnalysis(followupQuestion.trim());
-                    setFollowupQuestion("");
+                  onClick={async () => {
+                    const nextQuestion = followupQuestion.trim();
+                    if (!nextQuestion) return;
+                    const isSent = await runAnalysis(nextQuestion);
+                    if (isSent) {
+                      setFollowupQuestion("");
+                    }
                   }}
                   disabled={loading}
                   className="px-4 py-2.5 rounded-lg bg-invest-teal text-white font-cairo text-sm disabled:opacity-60"
