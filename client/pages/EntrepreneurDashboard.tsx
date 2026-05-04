@@ -177,8 +177,8 @@ export default function EntrepreneurDashboard() {
       email: user.email ?? "",
       phone: profile.phone ?? "",
       city: profile.city ?? "",
-      mainSector: profile.main_sector ?? "",
-      projectStage: profile.project_stage ?? "",
+      mainSector: profile.main_sector ?? profile.project_stage ?? "",
+      projectStage: profile.project_stage ?? profile.main_sector ?? "",
     });
 
     setPersonalFiles({
@@ -448,7 +448,7 @@ export default function EntrepreneurDashboard() {
         phone: profileForm.phone,
         city: profileForm.city,
         main_sector: profileForm.mainSector,
-        project_stage: profileForm.projectStage,
+        project_stage: profileForm.mainSector,
         national_id_uploaded: nextPersonalFiles.nationalId,
         personal_photo_uploaded: nextPersonalFiles.personalPhoto,
         kyc_complete: nextUploadedFilesCount === 2,
@@ -959,17 +959,12 @@ export default function EntrepreneurDashboard() {
                   onChange={(e) => setProfileForm((prev) => ({ ...prev, city: e.target.value }))}
                   placeholder="المدينة"
                 />
-                <input
-                  className="p-4 border rounded-xl border-light-gray font-cairo"
+                <textarea
+                  className="p-4 border rounded-xl border-light-gray font-cairo resize-none lg:col-span-2"
                   value={profileForm.mainSector}
                   onChange={(e) => setProfileForm((prev) => ({ ...prev, mainSector: e.target.value }))}
-                  placeholder="القطاع الرئيسي"
-                />
-                <input
-                  className="p-4 border rounded-xl border-light-gray font-cairo"
-                  value={profileForm.projectStage}
-                  onChange={(e) => setProfileForm((prev) => ({ ...prev, projectStage: e.target.value }))}
-                  placeholder="مرحلة المشروع"
+                  placeholder="بيان عنوان رائد الأعمال"
+                  rows={2}
                 />
               </div>
 
