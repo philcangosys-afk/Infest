@@ -617,11 +617,10 @@ export default function EntrepreneurDashboard() {
                   </select>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-2 mb-4">
+                <div className="grid md:grid-cols-2 gap-2 mb-4">
                   {[
                     { key: "pitch", label: "تحسين عرض المشروع" },
                     { key: "financial", label: "خطة مالية أولية" },
-                    { key: "responses", label: "الرد على المستثمرين" },
                   ].map((option) => (
                     <button
                       key={option.key}
