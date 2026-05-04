@@ -115,23 +115,33 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
   const serviceGuidance = getServiceGuidance(role, service);
   const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
 
-  const systemPrompt =
-    role === "investor"
+  const isFollowup = Boolean(body.question?.trim() && body.previousAnalysis?.trim());
+
+  const systemPrompt = isFollowup
+    ? "أنت مستشار ذكي وتجيب فقط على السؤال الإضافي للمستخدم بشكل مباشر ومختصر. ممنوع إعادة التقرير الكامل أو تكرار التحليل السابق."
+    : role === "investor"
       ? "أنت مستشار استثماري محترف لمنصة عربية. قدم إجابة دقيقة ومباشرة ومنظمة بنقاط واضحة وعناوين قصيرة."
       : "أنت مستشار أعمال وتمويل محترف لرواد الأعمال. قدم خطة عملية قابلة للتنفيذ باللغة العربية وبأسلوب واضح.";
 
-  const userPrompt = [
-    `نوع المستخدم: ${role === "investor" ? "مستثمر" : "رائد أعمال"}`,
-    `الخدمة المطلوبة: ${serviceTitle}`,
-    body.fileName ? `اسم ملف PDF المرفوع: ${body.fileName}` : "لا يوجد ملف مرفوع.",
-    body.projectSummary ? `ملخص المشروع:\n${body.projectSummary}` : "لا يوجد ملخص مشروع.",
-    body.previousAnalysis ? `نتيجة تحليل سابقة:\n${body.previousAnalysis}` : "",
-    body.question ? `سؤال المستخدم:\n${body.question}` : "",
-    `تعليمات أسلوب التحليل:\n${serviceGuidance}`,
-    "اختم بخطوات عملية تالية قابلة للتنفيذ.",
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const userPrompt = isFollowup
+    ? [
+        `نوع المستخدم: ${role === "investor" ? "مستثمر" : "رائد أعمال"}`,
+        `الخدمة المطلوبة: ${serviceTitle}`,
+        `التحليل السابق (مرجع):\n${body.previousAnalysis}`,
+        `السؤال الإضافي المطلوب الرد عليه فقط:\n${body.question}`,
+        "أجب على السؤال فقط بشكل مباشر (3-6 نقاط كحد أقصى) بدون إعادة التقرير الكامل.",
+      ].join("\n\n")
+    : [
+        `نوع المستخدم: ${role === "investor" ? "مستثمر" : "رائد أعمال"}`,
+        `الخدمة المطلوبة: ${serviceTitle}`,
+        body.fileName ? `اسم ملف PDF المرفوع: ${body.fileName}` : "لا يوجد ملف مرفوع.",
+        body.projectSummary ? `ملخص المشروع:\n${body.projectSummary}` : "لا يوجد ملخص مشروع.",
+        body.question ? `سؤال المستخدم:\n${body.question}` : "",
+        `تعليمات أسلوب التحليل:\n${serviceGuidance}`,
+        "اختم بخطوات عملية تالية قابلة للتنفيذ.",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
   try {
     const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
