@@ -95,6 +95,14 @@ export default function EntrepreneurDashboard() {
     duration: "",
     description: "",
   });
+  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
+  const [editProjectForm, setEditProjectForm] = useState({
+    name: "",
+    sector: "",
+    budget: "",
+    duration: "",
+    description: "",
+  });
 
   const [profileForm, setProfileForm] = useState<ProfileForm>({
     fullName: "",
@@ -320,7 +328,71 @@ export default function EntrepreneurDashboard() {
     }
 
     setProjects((prev) => prev.filter((item) => item.id !== projectId));
+    if (editingProjectId === projectId) {
+      setEditingProjectId(null);
+    }
     setActionNotice("تم حذف المشروع.");
+  };
+
+  const startEditProject = (project: EntrepreneurProject) => {
+    setEditingProjectId(project.id);
+    setEditProjectForm({
+      name: project.name,
+      sector: project.sector,
+      budget: project.budget,
+      duration: project.duration,
+      description: project.description,
+    });
+    setActionNotice("");
+  };
+
+  const saveEditedProject = async () => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+    if (!editingProjectId) return;
+
+    if (!editProjectForm.name || !editProjectForm.sector || !editProjectForm.budget || !editProjectForm.description) {
+      setActionNotice("يرجى تعبئة البيانات الأساسية قبل حفظ التعديل.");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("projects")
+      .update({
+        name: editProjectForm.name,
+        sector: editProjectForm.sector,
+        budget: editProjectForm.budget,
+        duration: editProjectForm.duration || "غير محدد",
+        description: editProjectForm.description,
+      })
+      .eq("id", editingProjectId)
+      .select("id, name, sector, budget, duration, description")
+      .single();
+
+    if (error || !data) {
+      setActionNotice("تعذر حفظ التعديلات على المشروع.");
+      return;
+    }
+
+    setProjects((prev) =>
+      prev.map((item) =>
+        item.id === editingProjectId
+          ? {
+              ...item,
+              name: data.name,
+              sector: data.sector,
+              budget: data.budget,
+              duration: data.duration || "غير محدد",
+              description: data.description,
+            }
+          : item,
+      ),
+    );
+
+    setEditingProjectId(null);
+    setActionNotice("تم حفظ تعديلات المشروع بنجاح.");
   };
 
   const loadChatMessages = async (request: InvestorRequest, silent = false) => {
@@ -744,7 +816,7 @@ export default function EntrepreneurDashboard() {
               <h3 className="font-cairo font-bold text-xl">قائمة المشاريع</h3>
               <div className="space-y-4">
                 {projects.map((project) => (
-                  <div key={project.id} className="p-4 border border-light-gray rounded-xl flex items-start justify-between gap-4">
+                  <div key={project.id} className="p-4 border border-light-gray rounded-xl flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="font-cairo font-semibold">{project.name}</p>
                       <p className="font-cairo text-xs text-dark-gray">{project.date}</p>
@@ -755,13 +827,63 @@ export default function EntrepreneurDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-1 text-white text-xs rounded ${project.statusColor}`}>{project.status}</span>
-                      <button className="p-2 text-invest-blue">
+                      <button onClick={() => startEditProject(project)} className="p-2 text-invest-blue">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button onClick={() => handleDeleteProject(project.id)} className="p-2 text-invest-red">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
+                    {editingProjectId === project.id && (
+                      <div className="mt-4 w-full border border-light-gray rounded-xl p-4 bg-light-gray/40 space-y-3">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <input
+                            value={editProjectForm.name}
+                            onChange={(e) => setEditProjectForm((prev) => ({ ...prev, name: e.target.value }))}
+                            className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm"
+                            placeholder="اسم المشروع"
+                          />
+                          <input
+                            value={editProjectForm.sector}
+                            onChange={(e) => setEditProjectForm((prev) => ({ ...prev, sector: e.target.value }))}
+                            className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm"
+                            placeholder="المجال"
+                          />
+                          <input
+                            value={editProjectForm.budget}
+                            onChange={(e) => setEditProjectForm((prev) => ({ ...prev, budget: e.target.value }))}
+                            className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm"
+                            placeholder="الميزانية المطلوبة"
+                          />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <input
+                            value={editProjectForm.duration}
+                            onChange={(e) => setEditProjectForm((prev) => ({ ...prev, duration: e.target.value }))}
+                            className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm"
+                            placeholder="مدة التنفيذ"
+                          />
+                          <textarea
+                            value={editProjectForm.description}
+                            onChange={(e) => setEditProjectForm((prev) => ({ ...prev, description: e.target.value }))}
+                            rows={3}
+                            className="border border-light-gray rounded-xl px-4 py-2.5 font-cairo text-sm resize-none"
+                            placeholder="تفاصيل المشروع"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={saveEditedProject} className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo text-sm font-semibold">
+                            حفظ التعديلات
+                          </button>
+                          <button
+                            onClick={() => setEditingProjectId(null)}
+                            className="px-4 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo text-sm"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {projects.length === 0 && <p className="font-cairo text-dark-gray">لا توجد مشاريع بعد.</p>}

@@ -337,8 +337,8 @@ export default function BrowseProjects() {
                 {filteredProjects.map((project) => {
                   const isFav = favoriteIds.includes(project.id);
                   return (
-                    <div key={project.id} className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                      <div className="relative h-40 bg-gradient-to-br from-invest-blue to-invest-teal overflow-hidden">
+                    <div key={project.id} className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-light-gray/70 transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="relative h-44 bg-gradient-to-br from-invest-blue to-invest-teal overflow-hidden">
                         <button
                           onClick={() => toggleFavorite(project.id)}
                           className="absolute top-4 right-4 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
@@ -350,24 +350,26 @@ export default function BrowseProjects() {
                         </div>
                       </div>
 
-                      <div className="p-6">
-                        <h3 className="font-cairo font-bold text-xl text-text-dark mb-1 line-clamp-1">{project.title}</h3>
-                        <p className="font-cairo text-sm text-dark-gray mb-4">👤 {project.entrepreneur}</p>
-
-                        <div className="inline-block mb-4">
-                          <span className="font-cairo text-xs font-semibold bg-light-gray text-invest-blue px-3 py-1.5 rounded-full">{project.category}</span>
+                      <div className="p-6 space-y-4">
+                        <div>
+                          <h3 className="font-cairo font-bold text-2xl text-text-dark mb-2 line-clamp-1">{project.title}</h3>
+                          <p className="font-cairo text-base text-dark-gray">👤 {project.entrepreneur}</p>
                         </div>
 
-                        <p className="font-cairo text-sm text-dark-gray mb-5 line-clamp-2 leading-relaxed">{project.description}</p>
+                        <div className="inline-block">
+                          <span className="font-cairo text-sm font-semibold bg-light-gray text-invest-blue px-3 py-1.5 rounded-full">{project.category}</span>
+                        </div>
 
-                        <div className="mb-4">
-                          <p className="font-cairo text-xs text-dark-gray mb-1">المبلغ المطلوب</p>
-                          <p className="font-cairo font-bold text-2xl text-invest-teal">{project.amount} <span className="text-sm">ج.س</span></p>
+                        <p className="font-cairo text-base text-dark-gray line-clamp-3 leading-8">{project.description}</p>
+
+                        <div className="rounded-2xl border border-invest-teal/20 bg-invest-teal/5 p-4">
+                          <p className="font-cairo text-sm text-dark-gray mb-1">مبلغ التمويل المطلوب</p>
+                          <p className="font-cairo font-bold text-3xl text-invest-teal">{project.amount} <span className="text-base">ج.س</span></p>
                         </div>
 
                         <Link
                           to={`/project-details/${project.id}`}
-                          className="w-full py-3 bg-gradient-to-r from-invest-teal to-invest-teal/90 text-white rounded-lg font-cairo font-bold text-sm hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                          className="w-full py-3.5 bg-gradient-to-r from-invest-teal to-invest-teal/90 text-white rounded-xl font-cairo font-bold text-base hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                         >
                           <span>عرض التفاصيل</span>
                           <span>→</span>
