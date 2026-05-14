@@ -15,6 +15,7 @@ import InvestorDashboard from "./pages/InvestorDashboard";
 import ProjectDetails from "./pages/ProjectDetails";
 import AiServicePage from "./pages/AiServicePage";
 import PartnershipsPage from "./pages/PartnershipsPage";
+import MyAdvisorPage from "./pages/MyAdvisorPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ export const App = () => (
           <Route path="/project-details/:id" element={<ProjectDetails />} />
           <Route path="/ai-service/:role/:service" element={<AiServicePage />} />
           <Route path="/partnerships" element={<PartnershipsPage />} />
+          <Route path="/my-advisor" element={<MyAdvisorPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
