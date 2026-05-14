@@ -15,6 +15,8 @@ import {
   Sparkles,
   Crown,
   Users,
+  FileDown,
+  Upload,
 } from "lucide-react";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -113,6 +115,11 @@ export default function InvestorDashboard() {
   const [kycDocumentType, setKycDocumentType] = useState<"passport" | "national_id">("national_id");
   const [kycDocumentName, setKycDocumentName] = useState("");
   const [profileDataComplete, setProfileDataComplete] = useState(false);
+  const [showNdaModal, setShowNdaModal] = useState(false);
+  const [pendingRequestProject, setPendingRequestProject] = useState<Project | null>(null);
+  const [ndaDownloaded, setNdaDownloaded] = useState(false);
+  const [signedNdaFileName, setSignedNdaFileName] = useState("");
+  const [submittingNdaRequest, setSubmittingNdaRequest] = useState(false);
 
   const isVerified = kycComplete && profileDataComplete;
   const profileCompletion = (kycComplete ? 50 : 0) + (profileDataComplete ? 50 : 0);
@@ -339,13 +346,7 @@ export default function InvestorDashboard() {
     setActionNotice("تمت الموافقة على مستند KYC من لجنة التحقق.");
   };
 
-  const sendContactRequest = async (project: Project) => {
-    if (!isSupabaseConfigured) {
-      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
-      return;
-    }
-    if (!currentUserId) return;
-
+  const openContactRequestModal = (project: Project) => {
     if (!isVerified) {
       if (kycStatus === "under_review") {
         setActionNotice("مستند KYC تحت المراجعة حالياً. يمكنك إرسال طلب التواصل بعد اعتماد اللجنة.");
@@ -355,6 +356,55 @@ export default function InvestorDashboard() {
       return;
     }
 
+    setPendingRequestProject(project);
+    setNdaDownloaded(false);
+    setSignedNdaFileName("");
+    setShowNdaModal(true);
+  };
+
+  const downloadNdaAgreement = () => {
+    if (!pendingRequestProject) return;
+
+    const agreement = [
+      "اتفاقية عدم الإفشاء والسرية",
+      "",
+      `المشروع: ${pendingRequestProject.name}`,
+      "",
+      "يقر المستثمر بعدم إفشاء أو مشاركة أي معلومات تخص المشروع أو رائد الأعمال خارج المنصة.",
+      "ويتعهد باستخدام المعلومات لغرض تقييم فرصة الاستثمار فقط.",
+      "",
+      "اسم المستثمر: ____________________",
+      "التوقيع: ____________________",
+      "التاريخ: ____________________",
+    ].join("\n");
+
+    const blob = new Blob([agreement], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `nda-${pendingRequestProject.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    setNdaDownloaded(true);
+    setActionNotice("تم تنزيل ملف اتفاقية عدم الإفشاء. يرجى التوقيع عليه ثم رفعه لإكمال إرسال الطلب.");
+  };
+
+  const handleSignedNdaUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setSignedNdaFileName(file.name);
+  };
+
+  const sendContactRequest = async (project: Project, ndaFileName: string) => {
+    if (!isSupabaseConfigured) {
+      setActionNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return false;
+    }
+    if (!currentUserId) return false;
+
     const { data, error } = await supabase
       .from("investment_requests")
       .insert({
@@ -362,14 +412,14 @@ export default function InvestorDashboard() {
         entrepreneur_id: project.entrepreneurId,
         project_id: project.id,
         status: "تم الإرسال",
-        message: `طلب تواصل جديد بخصوص مشروع ${project.name}`,
+        message: `طلب تواصل جديد بخصوص مشروع ${project.name} - مرفق اتفاقية عدم الإفشاء: ${ndaFileName}`,
       })
       .select("id, status, created_at")
       .single();
 
     if (error || !data) {
       setActionNotice("تعذر إرسال طلب التواصل، حاول مرة أخرى.");
-      return;
+      return false;
     }
 
     setMyRequests((prev) => [
@@ -384,6 +434,33 @@ export default function InvestorDashboard() {
     ]);
 
     setActionNotice("تم إرسال طلب التواصل إلى رائد الأعمال بنجاح.");
+    return true;
+  };
+
+  const submitContactRequestWithNda = async () => {
+    if (!pendingRequestProject) return;
+
+    if (!ndaDownloaded) {
+      setActionNotice("يجب تنزيل ملف اتفاقية عدم الإفشاء والسرية أولاً.");
+      return;
+    }
+
+    if (!signedNdaFileName) {
+      setActionNotice("يرجى رفع ملف الاتفاقية بعد التوقيع لإكمال إرسال الطلب.");
+      return;
+    }
+
+    setSubmittingNdaRequest(true);
+    const success = await sendContactRequest(pendingRequestProject, signedNdaFileName);
+    setSubmittingNdaRequest(false);
+
+    if (!success) return;
+
+    setShowNdaModal(false);
+    setPendingRequestProject(null);
+    setSelectedProject(null);
+    setNdaDownloaded(false);
+    setSignedNdaFileName("");
   };
 
   const loadChatMessages = async (request: RequestItem, silent = false) => {
@@ -830,7 +907,7 @@ export default function InvestorDashboard() {
                         <p className="font-cairo text-sm text-dark-gray">{project.amount}</p>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => sendContactRequest(project)}
+                            onClick={() => openContactRequestModal(project)}
                             className={`px-3 py-2 rounded-lg font-cairo text-xs ${
                               isVerified
                                 ? "border border-invest-teal text-invest-teal hover:bg-invest-teal/10"
@@ -1177,13 +1254,67 @@ export default function InvestorDashboard() {
                   <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">الميزانية: {selectedProject.amount}</div>
                 </div>
                 <button
-                  onClick={() => sendContactRequest(selectedProject)}
+                  onClick={() => openContactRequestModal(selectedProject)}
                   className={`mt-4 px-5 py-2.5 rounded-lg font-cairo font-semibold ${
                     isVerified ? "bg-invest-teal text-white hover:bg-emerald-600" : "bg-light-gray text-dark-gray cursor-not-allowed"
                   }`}
                 >
                   طلب تواصل مع رائد الأعمال
                 </button>
+              </div>
+            </div>
+          )}
+
+          {showNdaModal && pendingRequestProject && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-cairo font-bold text-xl text-invest-blue">اتفاقية عدم الإفشاء والسرية</h3>
+                  <button
+                    onClick={() => {
+                      setShowNdaModal(false);
+                      setPendingRequestProject(null);
+                    }}
+                    className="text-dark-gray font-cairo"
+                  >
+                    إغلاق
+                  </button>
+                </div>
+
+                <p className="font-cairo text-sm text-dark-gray leading-7">
+                  لإكمال إرسال طلب التواصل الخاص بمشروع <span className="font-bold">{pendingRequestProject.name}</span>، يجب تنزيل ملف
+                  اتفاقية عدم الإفشاء والسرية، توقيعه، ثم رفع النسخة الموقعة.
+                </p>
+
+                <button
+                  onClick={downloadNdaAgreement}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-invest-blue text-white font-cairo font-semibold"
+                >
+                  <FileDown className="w-4 h-4" />
+                  تحميل ملف اتفاقية عدم الإفشاء والسرية
+                </button>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-invest-teal text-invest-teal font-cairo text-sm font-semibold cursor-pointer hover:bg-invest-teal/10">
+                    <Upload className="w-4 h-4" />
+                    رفع الملف بعد التوقيع
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" className="hidden" onChange={handleSignedNdaUpload} />
+                  </label>
+                  <span className="font-cairo text-xs text-dark-gray">
+                    {signedNdaFileName ? `الملف المرفوع: ${signedNdaFileName}` : "لم يتم رفع ملف موقع بعد"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={submitContactRequestWithNda}
+                    disabled={submittingNdaRequest || !ndaDownloaded || !signedNdaFileName}
+                    className="px-5 py-2.5 rounded-lg bg-invest-teal text-white font-cairo font-semibold disabled:opacity-50"
+                  >
+                    {submittingNdaRequest ? "جاري إرسال الطلب..." : "إرسال الطلب لرائد الأعمال"}
+                  </button>
+                  <span className="font-cairo text-xs text-dark-gray">يتم تفعيل الإرسال بعد التحميل والتوقيع والرفع.</span>
+                </div>
               </div>
             </div>
           )}
