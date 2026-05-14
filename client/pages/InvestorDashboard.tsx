@@ -11,6 +11,7 @@ import {
   Bot,
   Wand2,
   Trash2,
+  Handshake,
 } from "lucide-react";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -650,7 +651,14 @@ export default function InvestorDashboard() {
               <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً، {profileForm.fullName || "مستثمر"} 👋</h1>
               <p className="font-cairo text-sm text-dark-gray">{titles[activeSection]}</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate("/partnerships")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-invest-teal to-invest-blue text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"
+              >
+                <Handshake className="w-4 h-4" />
+                الشراكات
+              </button>
               <button className="p-2 hover:bg-light-gray rounded-lg transition relative">
                 <Bell className="w-6 h-6 text-dark-gray" />
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-invest-red"></span>

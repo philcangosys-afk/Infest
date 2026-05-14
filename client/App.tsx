@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import ProjectDetails from "./pages/ProjectDetails";
 import AiServicePage from "./pages/AiServicePage";
+import PartnershipsPage from "./pages/PartnershipsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ export const App = () => (
           <Route path="/investor-dashboard" element={<InvestorDashboard />} />
           <Route path="/project-details/:id" element={<ProjectDetails />} />
           <Route path="/ai-service/:role/:service" element={<AiServicePage />} />
+          <Route path="/partnerships" element={<PartnershipsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
