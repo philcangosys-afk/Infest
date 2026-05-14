@@ -11,8 +11,9 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Advisor = {
   id: number;
@@ -66,9 +67,11 @@ export default function MyAdvisorPage() {
     [],
   );
 
+  const navigate = useNavigate();
   const [selectedAdvisor, setSelectedAdvisor] = useState<Advisor | null>(null);
   const [requestDescription, setRequestDescription] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   const closeRequestModal = () => {
     setSelectedAdvisor(null);
@@ -76,9 +79,51 @@ export default function MyAdvisorPage() {
     setAttachedFiles([]);
   };
 
-  const submitPaidRequest = () => {
+  const submitPaidRequest = async () => {
+    if (!selectedAdvisor) return;
+
     if (!requestDescription.trim()) {
       toast.error("يرجى كتابة شرح مختصر عن طلب الخدمة قبل الإرسال.");
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      toast.error("ربط قاعدة البيانات غير مكتمل حالياً.");
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً لإرسال طلب استشارة.");
+      navigate("/login");
+      return;
+    }
+
+    setSendingRequest(true);
+
+    const attachedFilesMeta = attachedFiles.map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    }));
+
+    const { error } = await supabase.from("advisor_service_requests").insert({
+      requester_id: user.id,
+      advisor_name: selectedAdvisor.name,
+      advisor_specialty: selectedAdvisor.specialty,
+      service_description: requestDescription.trim(),
+      attached_files: attachedFilesMeta,
+      status: "pending",
+      payment_status: "pending",
+    });
+
+    setSendingRequest(false);
+
+    if (error) {
+      toast.error("تعذر إرسال الطلب. تأكد من وجود جدول advisor_service_requests وصلاحياته.");
       return;
     }
 
@@ -231,10 +276,11 @@ export default function MyAdvisorPage() {
             <div className="px-6 py-4 border-t border-light-gray flex items-center justify-end">
               <button
                 onClick={submitPaidRequest}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-invest-blue text-white font-cairo font-bold text-sm hover:bg-blue-900 transition"
+                disabled={sendingRequest}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-invest-blue text-white font-cairo font-bold text-sm hover:bg-blue-900 transition disabled:opacity-60"
               >
                 <Send className="w-4 h-4" />
-                إرسال
+                {sendingRequest ? "جاري الإرسال..." : "إرسال"}
               </button>
             </div>
           </div>
