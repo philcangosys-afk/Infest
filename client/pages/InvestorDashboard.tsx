@@ -836,11 +836,12 @@ export default function InvestorDashboard() {
                   </span>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-3">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
                     { title: "تحليل جدوى مشروع", key: "feasibility" },
                     { title: "تقييم مخاطر الاستثمار", key: "risk" },
                     { title: "حساب العائد المتوقع", key: "returns" },
+                    { title: "نموذج العمل", key: "business_model" },
                   ].map((serviceItem) => (
                     <button
                       key={serviceItem.key}

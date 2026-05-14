@@ -16,11 +16,13 @@ const getServiceTitle = (role: AdvisorRole, service: string) => {
     if (service === "feasibility") return "تحليل جدوى مشروع";
     if (service === "risk") return "تقييم مخاطر الاستثمار";
     if (service === "returns") return "حساب العائد المتوقع";
+    if (service === "business_model") return "نموذج العمل";
   }
 
   if (role === "entrepreneur") {
     if (service === "pitch") return "تحسين عرض المشروع";
     if (service === "financial") return "خطة مالية أولية";
+    if (service === "business_model") return "نموذج العمل";
   }
 
   return "خدمة مستشار ذكي";
@@ -48,6 +50,24 @@ const getServiceGuidance = (role: AdvisorRole, service: string) => {
 
   if (role === "investor" && service === "returns") {
     return "قدّم تصوراً واضحاً للعائد المتوقع وفق سيناريو متحفظ وسيناريو مرجح، مع توضيح الافتراضات والنواقص المؤثرة على دقة التقدير.";
+  }
+
+  if (service === "business_model") {
+    return [
+      "المطلوب: استخلاص نموذج العمل من دراسة الجدوى بشكل عملي ومتكامل.",
+      "ابدأ بتوضيح معنى استخلاص نموذج العمل في سطرين: أي تحويل معلومات الدراسة إلى طريقة واضحة لكيفية خلق القيمة وتحقيق الإيراد واستدامة التشغيل.",
+      "قدّم النتيجة بهذه العناوين وبالترتيب:",
+      "1) ملخص فكرة المشروع وعرض القيمة (Value Proposition).",
+      "2) شرائح العملاء المستهدفة (من هم العملاء الأساسيون والثانويون).",
+      "3) قنوات الوصول والتوزيع وخطة الخدمة.",
+      "4) هيكل الإيرادات بالتفصيل: رسوم المعاملات، رسوم الإدارة، رسوم الأداء، اشتراكات، عمولات، وأي مصادر دخل إضافية مرتبطة بالمشروع.",
+      "5) هيكل التكاليف التشغيلية والرأسمالية وأكبر البنود المؤثرة.",
+      "6) الأنشطة الرئيسية والموارد الرئيسية والشركاء الرئيسيون.",
+      "7) المؤشرات الأساسية (KPIs) لمتابعة نجاح نموذج العمل.",
+      "8) المخاطر أو الفجوات في نموذج العمل وما المطلوب استكماله.",
+      "9) نموذج عمل مقترح نهائي مختصر بصيغة تنفيذية قابلة للعرض على الإدارة أو المستثمر.",
+      "إذا كانت المعلومات ناقصة لا تخترع. اذكر البيانات الناقصة بوضوح ضمن قائمة تحقق.",
+    ].join("\n");
   }
 
   if (role === "entrepreneur" && service === "pitch") {
@@ -118,8 +138,8 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
   }
 
   const allowedServices: Record<AdvisorRole, string[]> = {
-    investor: ["feasibility", "risk", "returns"],
-    entrepreneur: ["pitch", "financial"],
+    investor: ["feasibility", "risk", "returns", "business_model"],
+    entrepreneur: ["pitch", "financial", "business_model"],
   };
 
   if (!allowedServices[role].includes(service)) {
