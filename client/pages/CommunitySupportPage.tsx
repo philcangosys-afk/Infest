@@ -39,6 +39,17 @@ const saveLocalForumMessages = (items: ForumMessage[]) => {
   localStorage.setItem(LOCAL_FORUM_STORAGE_KEY, JSON.stringify(items));
 };
 
+const mergeForumMessages = (primary: ForumMessage[], secondary: ForumMessage[]) => {
+  const map = new Map<string, ForumMessage>();
+
+  [...secondary, ...primary].forEach((item) => {
+    const key = `${item.senderId}|${item.createdAt}|${item.content}`;
+    map.set(key, item);
+  });
+
+  return Array.from(map.values()).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+};
+
 export default function CommunitySupportPage() {
   const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -75,15 +86,16 @@ export default function CommunitySupportPage() {
 
     if (!error) {
       setStorageMode("community_table");
-      setMessages(
-        (data ?? []).map((item) => ({
-          id: item.id,
-          senderId: item.sender_id,
-          senderName: item.sender_name || "عضو المنصة",
-          content: item.content,
-          createdAt: item.created_at,
-        })),
-      );
+      const remoteItems: ForumMessage[] = (data ?? []).map((item) => ({
+        id: item.id,
+        senderId: item.sender_id,
+        senderName: item.sender_name || "عضو المنصة",
+        content: item.content,
+        createdAt: item.created_at,
+      }));
+      const mergedItems = mergeForumMessages(remoteItems, loadLocalForumMessages());
+      setMessages(mergedItems);
+      saveLocalForumMessages(mergedItems);
       setLoading(false);
       return;
     }
@@ -119,15 +131,16 @@ export default function CommunitySupportPage() {
       if (!silent) {
         setPageNotice("تم تشغيل المنتدى عبر وضع التوافق، والرسائل تعمل الآن بشكل حقيقي.");
       }
-      setMessages(
-        (fallbackRows ?? []).map((item) => ({
-          id: item.id,
-          senderId: item.sender_id,
-          senderName: senderNames.get(item.sender_id) || "عضو المنصة",
-          content: String(item.content || "").replace(COMMUNITY_PREFIX, ""),
-          createdAt: item.created_at,
-        })),
-      );
+      const fallbackItems: ForumMessage[] = (fallbackRows ?? []).map((item) => ({
+        id: item.id,
+        senderId: item.sender_id,
+        senderName: senderNames.get(item.sender_id) || "عضو المنصة",
+        content: String(item.content || "").replace(COMMUNITY_PREFIX, ""),
+        createdAt: item.created_at,
+      }));
+      const mergedItems = mergeForumMessages(fallbackItems, loadLocalForumMessages());
+      setMessages(mergedItems);
+      saveLocalForumMessages(mergedItems);
       setLoading(false);
       return;
     }
@@ -209,16 +222,20 @@ export default function CommunitySupportPage() {
         return;
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: data.id,
-          senderId: data.sender_id,
-          senderName: data.sender_name || currentUserName,
-          content: data.content,
-          createdAt: data.created_at,
-        },
-      ]);
+      setMessages((prev) => {
+        const next = [
+          ...prev,
+          {
+            id: data.id,
+            senderId: data.sender_id,
+            senderName: data.sender_name || currentUserName,
+            content: data.content,
+            createdAt: data.created_at,
+          },
+        ];
+        saveLocalForumMessages(next);
+        return next;
+      });
       setNewMessage("");
       return;
     }
@@ -257,16 +274,20 @@ export default function CommunitySupportPage() {
         return;
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: fallbackData.id,
-          senderId: fallbackData.sender_id,
-          senderName: currentUserName,
-          content: String(fallbackData.content || "").replace(COMMUNITY_PREFIX, ""),
-          createdAt: fallbackData.created_at,
-        },
-      ]);
+      setMessages((prev) => {
+        const next = [
+          ...prev,
+          {
+            id: fallbackData.id,
+            senderId: fallbackData.sender_id,
+            senderName: currentUserName,
+            content: String(fallbackData.content || "").replace(COMMUNITY_PREFIX, ""),
+            createdAt: fallbackData.created_at,
+          },
+        ];
+        saveLocalForumMessages(next);
+        return next;
+      });
       setNewMessage("");
       return;
     }
