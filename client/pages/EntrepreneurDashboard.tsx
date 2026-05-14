@@ -17,6 +17,7 @@ import {
   Award,
   Handshake,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -661,6 +662,13 @@ export default function EntrepreneurDashboard() {
               <p className="font-cairo text-sm text-dark-gray">{sectionTitle[activeSection]}</p>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/membership")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-purple-600 to-indigo-700 text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"
+              >
+                <Crown className="w-4 h-4" />
+                العضوية
+              </button>
               <button
                 onClick={() => navigate("/my-advisor")}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-invest-blue to-blue-900 text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"

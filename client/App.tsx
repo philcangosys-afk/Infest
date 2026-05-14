@@ -16,6 +16,8 @@ import ProjectDetails from "./pages/ProjectDetails";
 import AiServicePage from "./pages/AiServicePage";
 import PartnershipsPage from "./pages/PartnershipsPage";
 import MyAdvisorPage from "./pages/MyAdvisorPage";
+import MembershipPage from "./pages/MembershipPage";
+import MembershipCheckoutPage from "./pages/MembershipCheckoutPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ export const App = () => (
           <Route path="/ai-service/:role/:service" element={<AiServicePage />} />
           <Route path="/partnerships" element={<PartnershipsPage />} />
           <Route path="/my-advisor" element={<MyAdvisorPage />} />
+          <Route path="/membership" element={<MembershipPage />} />
+          <Route path="/membership/:planId" element={<MembershipCheckoutPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
