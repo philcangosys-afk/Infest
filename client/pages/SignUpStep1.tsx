@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff, Check } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export default function SignUpStep1() {
@@ -18,10 +18,13 @@ export default function SignUpStep1() {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
-  const [agreeTerms, setAgreeTerms] = useState(true);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showAddUserHint, setShowAddUserHint] = useState(false);
+  const [showPoliciesModal, setShowPoliciesModal] = useState(false);
+  const [hasReachedPolicyEnd, setHasReachedPolicyEnd] = useState(false);
+  const policyScrollRef = useRef<HTMLDivElement | null>(null);
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
@@ -43,6 +46,22 @@ export default function SignUpStep1() {
     if (passwordStrength <= 1) return "ضعيفة";
     if (passwordStrength <= 2) return "متوسطة";
     return "قوية";
+  };
+
+  const handlePolicyScroll = () => {
+    const container = policyScrollRef.current;
+    if (!container) return;
+
+    const reachedEnd = container.scrollTop + container.clientHeight >= container.scrollHeight - 12;
+    if (reachedEnd) {
+      setHasReachedPolicyEnd(true);
+    }
+  };
+
+  const acceptPolicies = () => {
+    setAgreeTerms(true);
+    setShowPoliciesModal(false);
+    setErrorMessage("");
   };
 
   const handleSignUp = async () => {
@@ -285,17 +304,31 @@ export default function SignUpStep1() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-5 bg-light-gray rounded-xl border-2 border-light-gray">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-6 h-6 mt-0.5 rounded border-2 border-invest-teal text-invest-teal cursor-pointer accent-invest-teal"
-              />
-              <label htmlFor="terms" className="font-cairo text-sm text-dark-gray cursor-pointer flex-1 font-semibold">
-                أوافق على <span className="text-invest-teal font-bold">الشروط والأحكام والسياسات</span>
-              </label>
+            <div className="p-5 bg-light-gray rounded-xl border-2 border-light-gray space-y-4">
+              <p className="font-cairo text-sm text-dark-gray font-semibold leading-7">
+                قبل إكمال التسجيل، يجب قراءة <span className="text-invest-teal font-bold">سياسات الخصوصية والسرية وعدم الإفشاء</span> كاملة ثم الضغط على "تم".
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPoliciesModal(true);
+                    setHasReachedPolicyEnd(false);
+                  }}
+                  className="px-4 py-2 rounded-lg border border-invest-teal text-invest-teal font-cairo font-bold hover:bg-invest-teal hover:text-white transition"
+                >
+                  عرض السياسات والخصوصية
+                </button>
+
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-cairo font-bold ${
+                    agreeTerms ? "bg-invest-green/15 text-invest-green" : "bg-invest-orange/15 text-invest-orange"
+                  }`}
+                >
+                  {agreeTerms ? "تمت الموافقة" : "موافقة مطلوبة"}
+                </span>
+              </div>
             </div>
 
             {errorMessage && (
@@ -317,7 +350,7 @@ export default function SignUpStep1() {
 
             <button
               onClick={handleSignUp}
-              disabled={loading}
+              disabled={loading || !agreeTerms}
               className="w-full py-4 bg-gradient-to-r from-invest-blue to-invest-blue/90 text-white rounded-xl font-cairo font-bold text-lg hover:shadow-xl transition-all duration-200 mt-8 shadow-lg hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
             >
               {loading ? "جاري إنشاء الحساب..." : "تسجيل"}
@@ -362,6 +395,114 @@ export default function SignUpStep1() {
           </div>
         </div>
       </div>
+
+      {showPoliciesModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-light-gray" dir="rtl">
+            <div className="px-6 py-5 border-b border-light-gray">
+              <h2 className="font-cairo text-2xl font-bold text-invest-blue">سياسات الخصوصية والسرية وعدم الإفشاء</h2>
+              <p className="font-cairo text-sm text-dark-gray mt-2">لإكمال التسجيل، يجب النزول إلى نهاية النص ثم الضغط على "تم".</p>
+            </div>
+
+            <div
+              ref={policyScrollRef}
+              onScroll={handlePolicyScroll}
+              className="max-h-[52vh] overflow-y-auto px-6 py-5 space-y-5 font-cairo text-sm leading-8 text-text-dark"
+            >
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">1) نطاق المنصة</h3>
+                <p>
+                  منصة Nile Invest AI تربط بين رواد الأعمال والمستثمرين والمستشار الذكي لتقييم فرص الاستثمار بشكل احترافي، مع احترام كامل للخصوصية
+                  والالتزامات القانونية والأخلاقية بين جميع الأطراف.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">2) سرية المعلومات وعدم الإفشاء</h3>
+                <p>
+                  يلتزم كل طرف بعدم إفشاء أو نشر أو إعادة استخدام أي بيانات أو مستندات أو دراسات أو محادثات أو تحليلات تخص الطرف الآخر خارج المنصة
+                  أو خارج غرض التقييم الاستثماري. ويشمل ذلك بيانات الهوية، البيانات المالية، خطة المشروع، والمراسلات.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">3) التزامات رائد الأعمال</h3>
+                <ul className="list-disc pr-6 space-y-1">
+                  <li>تقديم معلومات صحيحة ومحدثة وغير مضللة.</li>
+                  <li>عدم نشر مستندات يملكها طرف آخر دون إذن رسمي.</li>
+                  <li>احترام سرية المستثمرين والمستشار وعدم مشاركة ردودهم خارجيًا دون موافقة.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">4) التزامات المستثمر</h3>
+                <ul className="list-disc pr-6 space-y-1">
+                  <li>استخدام المعلومات لأغراض التقييم والقرار الاستثماري فقط.</li>
+                  <li>عدم استغلال بيانات المشاريع أو نسخ الأفكار أو مشاركة الدراسة دون تفويض.</li>
+                  <li>الالتزام بالتواصل المهني وعدم طلب بيانات شخصية خارج إطار المنصة إلا بموافقة صريحة.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">5) دور المستشار الذكي وحدود استخدامه</h3>
+                <p>
+                  التحليلات الصادرة من المستشار الذكي هي دعم مهني لاتخاذ القرار وليست ضمانًا نهائيًا للربح أو النجاح. يتحمل كل مستخدم مسؤولية التحقق
+                  النهائي من البيانات والقرارات المالية والقانونية قبل التنفيذ.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">6) حماية الحساب والبيانات</h3>
+                <ul className="list-disc pr-6 space-y-1">
+                  <li>كل مستخدم مسؤول عن حماية كلمة المرور وعدم مشاركتها.</li>
+                  <li>تُحفظ البيانات ضمن بنية آمنة، مع منع الوصول غير المصرح به وفق السياسات الفنية المعتمدة.</li>
+                  <li>يجوز تعليق أي حساب يثبت إساءة استخدام البيانات أو محاولة الوصول غير المشروع.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">7) فائدة المستخدم من المنصة</h3>
+                <p>
+                  باستخدام المنصة يحصل المستخدم على مساحة منظمة لعرض المشاريع، تقييم الفرص، إدارة طلبات التواصل، والاستفادة من تحليل ذكي يساعد على
+                  رفع جودة القرار الاستثماري وتقليل المخاطر وتحسين جاهزية المشروع.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-invest-blue mb-2">8) الموافقة الملزمة</h3>
+                <p>
+                  بالضغط على "تم" فإنك تقر بأنك قرأت هذه السياسة كاملة وفهمت الالتزامات الخاصة بالخصوصية والسرية وعدم الإفشاء، وتوافق على الالتزام
+                  بها عند استخدام المنصة.
+                </p>
+              </section>
+            </div>
+
+            <div className="px-6 py-4 border-t border-light-gray flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <p className="font-cairo text-xs text-dark-gray">
+                {hasReachedPolicyEnd ? "تم الوصول إلى نهاية السياسة. يمكنك الضغط على تم." : "انزل إلى آخر النص لتفعيل زر تم."}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPoliciesModal(false)}
+                  className="px-4 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo font-semibold hover:bg-light-gray transition"
+                >
+                  إغلاق
+                </button>
+                <button
+                  type="button"
+                  onClick={acceptPolicies}
+                  disabled={!hasReachedPolicyEnd}
+                  className="px-5 py-2 rounded-lg bg-invest-teal text-white font-cairo font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  تم
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
