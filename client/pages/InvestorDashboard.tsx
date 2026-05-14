@@ -14,6 +14,7 @@ import {
   Handshake,
   Sparkles,
   Crown,
+  Users,
 } from "lucide-react";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -660,6 +661,13 @@ export default function InvestorDashboard() {
               >
                 <Crown className="w-4 h-4" />
                 العضوية
+              </button>
+              <button
+                onClick={() => navigate("/community-support")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-emerald-600 to-emerald-700 text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"
+              >
+                <Users className="w-4 h-4" />
+                منتدي الدعم المجتمعي
               </button>
               <button
                 onClick={() => navigate("/my-advisor")}

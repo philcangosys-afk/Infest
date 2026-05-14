@@ -1,0 +1,238 @@
+import { MessageCircle, Send, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+
+type ForumMessage = {
+  id: number;
+  senderId: string;
+  senderName: string;
+  content: string;
+  createdAt: string;
+};
+
+const formatTime = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
+export default function CommunitySupportPage() {
+  const navigate = useNavigate();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState("عضو المنصة");
+  const [messages, setMessages] = useState<ForumMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [pageNotice, setPageNotice] = useState("");
+
+  const loadForumMessages = async (silent = false) => {
+    if (!isSupabaseConfigured) {
+      if (!silent) {
+        setPageNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+      }
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("community_support_messages")
+      .select("id, sender_id, sender_name, content, created_at")
+      .order("created_at", { ascending: true })
+      .limit(400);
+
+    if (error) {
+      if (!silent) {
+        setPageNotice("تعذر تحميل المنتدى. تأكد من وجود جدول community_support_messages وصلاحياته.");
+      }
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
+
+    setMessages(
+      (data ?? []).map((item) => ({
+        id: item.id,
+        senderId: item.sender_id,
+        senderName: item.sender_name || "عضو المنصة",
+        content: item.content,
+        createdAt: item.created_at,
+      })),
+    );
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      if (!isSupabaseConfigured) {
+        setPageNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+        setLoading(false);
+        return;
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error("يجب تسجيل الدخول للدخول إلى منتدي الدعم المجتمعي.");
+        navigate("/login");
+        return;
+      }
+
+      setCurrentUserId(user.id);
+
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+      const senderName = profile?.full_name?.trim() || user.email || "عضو المنصة";
+      setCurrentUserName(senderName);
+
+      await loadForumMessages();
+    };
+
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const intervalId = setInterval(() => {
+      loadForumMessages(true);
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [currentUserId]);
+
+  const canSend = useMemo(() => Boolean(newMessage.trim()) && !sending, [newMessage, sending]);
+
+  const handleSendMessage = async () => {
+    if (!currentUserId || !newMessage.trim()) return;
+    if (!isSupabaseConfigured) return;
+
+    setSending(true);
+
+    const payload = {
+      sender_id: currentUserId,
+      sender_name: currentUserName,
+      content: newMessage.trim(),
+    };
+
+    const { data, error } = await supabase
+      .from("community_support_messages")
+      .insert(payload)
+      .select("id, sender_id, sender_name, content, created_at")
+      .single();
+
+    setSending(false);
+
+    if (error || !data) {
+      setPageNotice("تعذر إرسال الرسالة. تأكد من وجود جدول community_support_messages وصلاحياته.");
+      return;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: data.id,
+        senderId: data.sender_id,
+        senderName: data.sender_name || currentUserName,
+        content: data.content,
+        createdAt: data.created_at,
+      },
+    ]);
+    setNewMessage("");
+  };
+
+  return (
+    <div className="min-h-screen bg-light-gray" dir="rtl">
+      <header className="bg-white border-b border-light-gray">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <Users className="w-6 h-6 text-emerald-700" />
+            </div>
+            <div>
+              <h1 className="font-cairo text-2xl font-bold text-invest-blue">منتدي الدعم المجتمعي</h1>
+              <p className="font-cairo text-sm text-dark-gray">مجموعة مفتوحة لأعضاء المنصة لطرح الأسئلة وتبادل النصائح مجاناً.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/dashboard"
+              className="px-4 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo font-semibold hover:bg-white transition"
+            >
+              لوحة رائد الأعمال
+            </Link>
+            <Link
+              to="/investor-dashboard"
+              className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
+            >
+              لوحة المستثمر
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto p-6">
+        {!!pageNotice && (
+          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 font-cairo text-sm p-3">{pageNotice}</div>
+        )}
+
+        <div className="bg-white rounded-2xl border border-light-gray shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-light-gray flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-emerald-700" />
+            <p className="font-cairo text-sm text-dark-gray">الدردشة الجماعية للأعضاء</p>
+          </div>
+
+          <div className="h-[58vh] overflow-y-auto p-4 space-y-3 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]">
+            {loading ? (
+              <p className="font-cairo text-sm text-dark-gray">جاري تحميل الرسائل...</p>
+            ) : messages.length ? (
+              messages.map((msg) => {
+                const mine = msg.senderId === currentUserId;
+                return (
+                  <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm ${mine ? "bg-emerald-600 text-white" : "bg-white border border-light-gray text-text-dark"}`}>
+                      <div className={`font-cairo text-[11px] mb-1 ${mine ? "text-emerald-100" : "text-dark-gray"}`}>
+                        {msg.senderName}
+                      </div>
+                      <p className="font-cairo text-sm leading-7 whitespace-pre-wrap">{msg.content}</p>
+                      <p className={`font-cairo text-[10px] mt-1 text-left ${mine ? "text-emerald-100" : "text-dark-gray"}`}>
+                        {formatTime(msg.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="font-cairo text-sm text-dark-gray">لا توجد رسائل بعد. ابدأ بسؤال أو نصيحة لدعم المجتمع.</p>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-light-gray bg-white">
+            <div className="flex gap-2 items-end">
+              <textarea
+                rows={2}
+                value={newMessage}
+                onChange={(event) => setNewMessage(event.target.value)}
+                placeholder="اكتب سؤالك أو نصيحتك للمجتمع..."
+                className="flex-1 border border-light-gray rounded-xl px-4 py-3 font-cairo text-sm resize-none focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!canSend}
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 text-white font-cairo font-bold text-sm hover:bg-emerald-700 transition disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                إرسال
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
