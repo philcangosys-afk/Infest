@@ -628,7 +628,7 @@ export default function EntrepreneurDashboard() {
           <span className="font-cairo font-bold text-lg">Nile Invest AI</span>
         </Link>
 
-        <nav className="space-y-3 mb-12">
+        <nav className="space-y-3 mb-4">
           {sidebarItems.map((item) => (
             <button
               key={item.key}
@@ -642,6 +642,30 @@ export default function EntrepreneurDashboard() {
             </button>
           ))}
         </nav>
+
+        <div className="space-y-2 border-t border-white/20 pt-4">
+          <button
+            onClick={() => navigate("/my-advisor")}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold text-white hover:bg-invest-blue/80 transition"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>مستشارك الخاص</span>
+          </button>
+          <button
+            onClick={() => navigate("/partnerships")}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold text-white hover:bg-invest-blue/80 transition"
+          >
+            <Handshake className="w-4 h-4" />
+            <span>الشراكات</span>
+          </button>
+          <button
+            onClick={() => navigate("/community-support")}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold text-white hover:bg-invest-blue/80 transition"
+          >
+            <UsersRound className="w-4 h-4" />
+            <span>منتدي الدعم المجتمعي</span>
+          </button>
+        </div>
 
         <button
           onClick={async () => {
@@ -669,27 +693,6 @@ export default function EntrepreneurDashboard() {
               >
                 <Crown className="w-4 h-4" />
                 العضوية
-              </button>
-              <button
-                onClick={() => navigate("/community-support")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-emerald-600 to-emerald-700 text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"
-              >
-                <UsersRound className="w-4 h-4" />
-                منتدي الدعم المجتمعي
-              </button>
-              <button
-                onClick={() => navigate("/my-advisor")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-invest-blue to-blue-900 text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"
-              >
-                <Sparkles className="w-4 h-4" />
-                مستشارك الخاص
-              </button>
-              <button
-                onClick={() => navigate("/partnerships")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-invest-teal to-invest-blue text-white font-cairo font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition"
-              >
-                <Handshake className="w-4 h-4" />
-                الشراكات
               </button>
               <button className="p-2 hover:bg-light-gray rounded-lg transition relative">
                 <Bell className="w-6 h-6 text-dark-gray" />
