@@ -12,14 +12,31 @@ type ForumMessage = {
   createdAt: string;
 };
 
-type ForumStorageMode = "community_table" | "messages_fallback";
+type ForumStorageMode = "community_table" | "messages_fallback" | "local_fallback";
 
 const COMMUNITY_PREFIX = "[منتدى] ";
+const LOCAL_FORUM_STORAGE_KEY = "community_support_local_messages";
 
 const formatTime = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
+const loadLocalForumMessages = (): ForumMessage[] => {
+  const raw = localStorage.getItem(LOCAL_FORUM_STORAGE_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as ForumMessage[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalForumMessages = (items: ForumMessage[]) => {
+  localStorage.setItem(LOCAL_FORUM_STORAGE_KEY, JSON.stringify(items));
 };
 
 export default function CommunitySupportPage() {
@@ -35,8 +52,10 @@ export default function CommunitySupportPage() {
 
   const loadForumMessages = async (silent = false) => {
     if (!isSupabaseConfigured) {
+      setStorageMode("local_fallback");
+      setMessages(loadLocalForumMessages());
       if (!silent) {
-        setPageNotice("ربط قاعدة البيانات غير مكتمل حالياً.");
+        setPageNotice("المنتدى يعمل حالياً بوضع محلي بسبب عدم اكتمال ربط قاعدة البيانات.");
       }
       setLoading(false);
       return;
@@ -72,10 +91,12 @@ export default function CommunitySupportPage() {
         .limit(400);
 
       if (fallbackError) {
+        setStorageMode("local_fallback");
+        const localItems = loadLocalForumMessages();
+        setMessages(localItems);
         if (!silent) {
-          setPageNotice("تعذر تحميل المنتدى. تأكد من وجود جدول community_support_messages أو صلاحيات جدول messages.");
+          setPageNotice("تم تشغيل المنتدى بوضع محلي بسبب صلاحيات قاعدة البيانات.");
         }
-        setMessages([]);
         setLoading(false);
         return;
       }
@@ -105,10 +126,12 @@ export default function CommunitySupportPage() {
       return;
     }
 
+    setStorageMode("local_fallback");
+    const localItems = loadLocalForumMessages();
+    setMessages(localItems);
     if (!silent) {
-      setPageNotice("تعذر تحميل المنتدى. تأكد من الصلاحيات.");
+      setPageNotice("تم تشغيل المنتدى بوضع محلي بسبب صلاحيات قاعدة البيانات.");
     }
-    setMessages([]);
     setLoading(false);
   };
 
@@ -194,35 +217,68 @@ export default function CommunitySupportPage() {
       return;
     }
 
-    const fallbackPayload = {
-      sender_id: currentUserId,
-      receiver_id: currentUserId,
-      content: `${COMMUNITY_PREFIX}${newMessage.trim()}`,
-    };
+    if (storageMode === "messages_fallback") {
+      const fallbackPayload = {
+        sender_id: currentUserId,
+        receiver_id: currentUserId,
+        content: `${COMMUNITY_PREFIX}${newMessage.trim()}`,
+      };
 
-    const { data: fallbackData, error: fallbackError } = await supabase
-      .from("messages")
-      .insert(fallbackPayload)
-      .select("id, sender_id, content, created_at")
-      .single();
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("messages")
+        .insert(fallbackPayload)
+        .select("id, sender_id, content, created_at")
+        .single();
 
-    setSending(false);
+      setSending(false);
 
-    if (fallbackError || !fallbackData) {
-      setPageNotice("تعذر إرسال الرسالة. تأكد من صلاحيات جدول messages.");
+      if (fallbackError || !fallbackData) {
+        const localMessage: ForumMessage = {
+          id: Date.now(),
+          senderId: currentUserId,
+          senderName: currentUserName,
+          content: newMessage.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        setStorageMode("local_fallback");
+        setPageNotice("تم الإرسال بوضع محلي بسبب صلاحيات جدول messages.");
+        setMessages((prev) => {
+          const next = [...prev, localMessage];
+          saveLocalForumMessages(next);
+          return next;
+        });
+        setNewMessage("");
+        return;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: fallbackData.id,
+          senderId: fallbackData.sender_id,
+          senderName: currentUserName,
+          content: String(fallbackData.content || "").replace(COMMUNITY_PREFIX, ""),
+          createdAt: fallbackData.created_at,
+        },
+      ]);
+      setNewMessage("");
       return;
     }
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: fallbackData.id,
-        senderId: fallbackData.sender_id,
-        senderName: currentUserName,
-        content: String(fallbackData.content || "").replace(COMMUNITY_PREFIX, ""),
-        createdAt: fallbackData.created_at,
-      },
-    ]);
+    setSending(false);
+    const localMessage: ForumMessage = {
+      id: Date.now(),
+      senderId: currentUserId,
+      senderName: currentUserName,
+      content: newMessage.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => {
+      const next = [...prev, localMessage];
+      saveLocalForumMessages(next);
+      return next;
+    });
     setNewMessage("");
   };
 
