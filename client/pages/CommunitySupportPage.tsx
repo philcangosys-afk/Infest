@@ -51,6 +51,12 @@ export default function CommunitySupportPage() {
   const [storageMode, setStorageMode] = useState<ForumStorageMode>("community_table");
 
   const loadForumMessages = async (silent = false) => {
+    if (storageMode === "local_fallback" && silent) {
+      setMessages(loadLocalForumMessages());
+      setLoading(false);
+      return;
+    }
+
     if (!isSupabaseConfigured) {
       setStorageMode("local_fallback");
       setMessages(loadLocalForumMessages());
@@ -173,7 +179,7 @@ export default function CommunitySupportPage() {
     }, 4000);
 
     return () => clearInterval(intervalId);
-  }, [currentUserId]);
+  }, [currentUserId, storageMode]);
 
   const canSend = useMemo(() => Boolean(newMessage.trim()) && !sending, [newMessage, sending]);
 
