@@ -12,6 +12,10 @@ type ForumMessage = {
   createdAt: string;
 };
 
+type ForumStorageMode = "community_table" | "messages_fallback";
+
+const COMMUNITY_PREFIX = "[منتدى] ";
+
 const formatTime = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
@@ -27,6 +31,7 @@ export default function CommunitySupportPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [pageNotice, setPageNotice] = useState("");
+  const [storageMode, setStorageMode] = useState<ForumStorageMode>("community_table");
 
   const loadForumMessages = async (silent = false) => {
     if (!isSupabaseConfigured) {
@@ -43,25 +48,67 @@ export default function CommunitySupportPage() {
       .order("created_at", { ascending: true })
       .limit(400);
 
-    if (error) {
-      if (!silent) {
-        setPageNotice("تعذر تحميل المنتدى. تأكد من وجود جدول community_support_messages وصلاحياته.");
-      }
-      setMessages([]);
+    if (!error) {
+      setStorageMode("community_table");
+      setMessages(
+        (data ?? []).map((item) => ({
+          id: item.id,
+          senderId: item.sender_id,
+          senderName: item.sender_name || "عضو المنصة",
+          content: item.content,
+          createdAt: item.created_at,
+        })),
+      );
       setLoading(false);
       return;
     }
 
-    setMessages(
-      (data ?? []).map((item) => ({
-        id: item.id,
-        senderId: item.sender_id,
-        senderName: item.sender_name || "عضو المنصة",
-        content: item.content,
-        createdAt: item.created_at,
-      })),
-    );
+    if (error.code === "PGRST205") {
+      const { data: fallbackRows, error: fallbackError } = await supabase
+        .from("messages")
+        .select("id, sender_id, content, created_at")
+        .like("content", `${COMMUNITY_PREFIX}%`)
+        .order("created_at", { ascending: true })
+        .limit(400);
 
+      if (fallbackError) {
+        if (!silent) {
+          setPageNotice("تعذر تحميل المنتدى. تأكد من وجود جدول community_support_messages أو صلاحيات جدول messages.");
+        }
+        setMessages([]);
+        setLoading(false);
+        return;
+      }
+
+      const senderIds = [...new Set((fallbackRows ?? []).map((row) => row.sender_id))];
+      const senderNames = new Map<string, string>();
+
+      if (senderIds.length) {
+        const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", senderIds);
+        (profiles ?? []).forEach((profile) => senderNames.set(profile.id, profile.full_name || "عضو المنصة"));
+      }
+
+      setStorageMode("messages_fallback");
+      if (!silent) {
+        setPageNotice("تم تشغيل المنتدى عبر وضع التوافق، والرسائل تعمل الآن بشكل حقيقي.");
+      }
+      setMessages(
+        (fallbackRows ?? []).map((item) => ({
+          id: item.id,
+          senderId: item.sender_id,
+          senderName: senderNames.get(item.sender_id) || "عضو المنصة",
+          content: String(item.content || "").replace(COMMUNITY_PREFIX, ""),
+          createdAt: item.created_at,
+        })),
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (!silent) {
+      setPageNotice("تعذر تحميل المنتدى. تأكد من الصلاحيات.");
+    }
+    setMessages([]);
     setLoading(false);
   };
 
@@ -113,33 +160,67 @@ export default function CommunitySupportPage() {
 
     setSending(true);
 
-    const payload = {
+    if (storageMode === "community_table") {
+      const payload = {
+        sender_id: currentUserId,
+        sender_name: currentUserName,
+        content: newMessage.trim(),
+      };
+
+      const { data, error } = await supabase
+        .from("community_support_messages")
+        .insert(payload)
+        .select("id, sender_id, sender_name, content, created_at")
+        .single();
+
+      setSending(false);
+
+      if (error || !data) {
+        setPageNotice("تعذر إرسال الرسالة. تأكد من وجود جدول community_support_messages وصلاحياته.");
+        return;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          senderId: data.sender_id,
+          senderName: data.sender_name || currentUserName,
+          content: data.content,
+          createdAt: data.created_at,
+        },
+      ]);
+      setNewMessage("");
+      return;
+    }
+
+    const fallbackPayload = {
       sender_id: currentUserId,
-      sender_name: currentUserName,
-      content: newMessage.trim(),
+      receiver_id: currentUserId,
+      content: `${COMMUNITY_PREFIX}${newMessage.trim()}`,
     };
 
-    const { data, error } = await supabase
-      .from("community_support_messages")
-      .insert(payload)
-      .select("id, sender_id, sender_name, content, created_at")
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("messages")
+      .insert(fallbackPayload)
+      .select("id, sender_id, content, created_at")
       .single();
 
     setSending(false);
 
-    if (error || !data) {
-      setPageNotice("تعذر إرسال الرسالة. تأكد من وجود جدول community_support_messages وصلاحياته.");
+    if (fallbackError || !fallbackData) {
+      setPageNotice("تعذر إرسال الرسالة. تأكد من صلاحيات جدول messages.");
       return;
     }
 
     setMessages((prev) => [
       ...prev,
       {
-        id: data.id,
-        senderId: data.sender_id,
-        senderName: data.sender_name || currentUserName,
-        content: data.content,
-        createdAt: data.created_at,
+        id: fallbackData.id,
+        senderId: fallbackData.sender_id,
+        senderName: currentUserName,
+        content: String(fallbackData.content || "").replace(COMMUNITY_PREFIX, ""),
+        createdAt: fallbackData.created_at,
       },
     ]);
     setNewMessage("");
