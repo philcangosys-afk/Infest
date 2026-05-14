@@ -72,6 +72,7 @@ export default function MyAdvisorPage() {
   const [requestDescription, setRequestDescription] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [sendingRequest, setSendingRequest] = useState(false);
+  const [pageNotice, setPageNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const closeRequestModal = () => {
     setSelectedAdvisor(null);
@@ -83,12 +84,16 @@ export default function MyAdvisorPage() {
     if (!selectedAdvisor) return;
 
     if (!requestDescription.trim()) {
-      toast.error("يرجى كتابة شرح مختصر عن طلب الخدمة قبل الإرسال.");
+      const message = "يرجى كتابة شرح مختصر عن طلب الخدمة قبل الإرسال.";
+      setPageNotice({ type: "error", text: message });
+      toast.error(message);
       return;
     }
 
     if (!isSupabaseConfigured) {
-      toast.error("ربط قاعدة البيانات غير مكتمل حالياً.");
+      const message = "ربط قاعدة البيانات غير مكتمل حالياً.";
+      setPageNotice({ type: "error", text: message });
+      toast.error(message);
       return;
     }
 
@@ -97,7 +102,9 @@ export default function MyAdvisorPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً لإرسال طلب استشارة.");
+      const message = "يجب تسجيل الدخول أولاً لإرسال طلب استشارة.";
+      setPageNotice({ type: "error", text: message });
+      toast.error(message);
       navigate("/login");
       return;
     }
@@ -123,11 +130,15 @@ export default function MyAdvisorPage() {
     setSendingRequest(false);
 
     if (error) {
-      toast.error("تعذر إرسال الطلب. تأكد من وجود جدول advisor_service_requests وصلاحياته.");
+      const message = "تعذر إرسال الطلب. تأكد من وجود جدول advisor_service_requests وصلاحياته.";
+      setPageNotice({ type: "error", text: message });
+      toast.error(message);
       return;
     }
 
-    toast.success("تم ارسال الطلب لرائد الاعمال وسوف يرد");
+    const successMessage = "تم ارسال الطلب لرائد الاعمال وسوف يرد";
+    setPageNotice({ type: "success", text: successMessage });
+    toast.success(successMessage);
     closeRequestModal();
   };
 
@@ -162,8 +173,21 @@ export default function MyAdvisorPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {advisors.map((advisor) => (
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-5">
+        {pageNotice && (
+          <div
+            className={`rounded-xl border p-4 font-cairo text-sm ${
+              pageNotice.type === "success"
+                ? "border-invest-teal/30 bg-invest-teal/10 text-invest-blue"
+                : "border-invest-red/30 bg-invest-red/10 text-invest-red"
+            }`}
+          >
+            {pageNotice.text}
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {advisors.map((advisor) => (
           <article key={advisor.id} className="bg-white rounded-2xl border border-light-gray p-5 shadow-sm space-y-4">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -221,6 +245,7 @@ export default function MyAdvisorPage() {
             </button>
           </article>
         ))}
+        </div>
       </main>
 
       {selectedAdvisor && (
