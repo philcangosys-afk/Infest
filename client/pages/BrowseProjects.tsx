@@ -16,10 +16,27 @@ type ProjectCard = {
 const fundingOptions = ["أقل من 100K", "100K-1M", "1M-10M", "أكثر من 10M"];
 const stageOptions = ["فكرة", "نموذج أولي", "شركة ناشئة", "نمو", "Startup", "Growth", "Scale"];
 
+const toEnglishDigits = (value: string) =>
+  value
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/٬/g, ",")
+    .replace(/٫/g, ".");
+
 const amountToNumber = (amount: string) => {
-  const cleaned = amount.replace(/[^\d.]/g, "");
+  const normalized = toEnglishDigits(amount);
+  const cleaned = normalized.replace(/[^\d.]/g, "");
   return Number(cleaned || "0");
 };
+
+const formatAmountEnglish = (amount: string) => {
+  const numeric = amountToNumber(amount);
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return numeric.toLocaleString("en-US");
+  }
+  return toEnglishDigits(amount);
+};
+
+const formatCountEnglish = (value: number) => value.toLocaleString("en-US");
 
 const matchFundingRange = (amount: number, range: string) => {
   if (range === "أقل من 100K") return amount < 100_000;
@@ -313,8 +330,8 @@ export default function BrowseProjects() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <p className="font-cairo text-sm text-dark-gray mb-1">المشاريع المتاحة</p>
-                <h2 className="font-cairo font-bold text-4xl text-invest-blue">
-                  {loading ? "..." : filteredProjects.length} <span className="text-2xl text-dark-gray">مشروع</span>
+                <h2 className="font-cairo font-bold text-4xl text-invest-blue" dir="ltr">
+                  {loading ? "..." : formatCountEnglish(filteredProjects.length)} <span className="text-2xl text-dark-gray" dir="rtl">مشروع</span>
                 </h2>
               </div>
               <button
@@ -360,7 +377,7 @@ export default function BrowseProjects() {
 
                         <div className="rounded-2xl border border-invest-teal/20 bg-invest-teal/5 p-4">
                           <p className="font-cairo text-sm text-dark-gray mb-1">مبلغ التمويل المطلوب</p>
-                          <p className="font-cairo font-bold text-3xl text-invest-teal">{project.amount} <span className="text-base">ج.س</span></p>
+                          <p className="font-cairo font-bold text-3xl text-invest-teal" dir="ltr">{formatAmountEnglish(project.amount)} <span className="text-base">SDG</span></p>
                         </div>
 
                         <Link
