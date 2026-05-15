@@ -95,7 +95,7 @@ export default function PartnershipsPage() {
               <Handshake className="w-6 h-6 text-invest-blue" />
             </div>
             <div>
-              <h1 className="font-cairo text-2xl font-bold text-invest-blue">الشراكات • شركاء النجاح</h1>
+              <h1 className="font-cairo text-2xl font-bold text-invest-blue">الشراكات</h1>
               <p className="font-cairo text-sm text-dark-gray">اختر الشريك المناسب وتواصل معه مباشرة عبر بيانات التواصل المعتمدة.</p>
             </div>
           </div>

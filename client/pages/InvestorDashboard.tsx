@@ -76,6 +76,25 @@ const formatDate = (iso: string) => {
   return `${y}/${m}/${day}`;
 };
 
+const toEnglishDigits = (value: string) =>
+  value
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/٬/g, ",")
+    .replace(/٫/g, ".");
+
+const formatFundingAmount = (amount: string | number | null | undefined) => {
+  const normalized = toEnglishDigits(String(amount ?? "")).trim();
+  const numeric = Number(normalized.replace(/[^\d.]/g, ""));
+
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return numeric.toLocaleString("en-US");
+  }
+
+  return normalized;
+};
+
+const formatFundingAmountWithCurrency = (amount: string | number | null | undefined) => `${formatFundingAmount(amount)} SDG`;
+
 const getInvestorKycStorageKey = (userId: string) => `investor_kyc_draft_${userId}`;
 
 export default function InvestorDashboard() {
@@ -233,7 +252,7 @@ export default function InvestorDashboard() {
       entrepreneurId: row.owner_id,
       entrepreneurName: ownerMap.get(row.owner_id) ?? "رائد أعمال",
       name: row.name,
-      amount: row.budget,
+      amount: String(row.budget ?? ""),
       sector: row.sector,
       stage: row.stage,
       description: row.description,
@@ -835,7 +854,7 @@ export default function InvestorDashboard() {
                   {projects.slice(0, 3).map((p) => (
                     <div key={p.id} className="border border-light-gray rounded-xl p-4">
                       <p className="font-cairo font-bold">{p.name}</p>
-                      <p className="font-cairo text-sm text-dark-gray">{p.amount}</p>
+                      <p className="font-cairo text-2xl font-black text-invest-blue tracking-tight" dir="ltr">{formatFundingAmountWithCurrency(p.amount)}</p>
                       <p className="font-cairo text-xs text-invest-teal mt-1">Matching: {p.matching}</p>
                     </div>
                   ))}
@@ -929,7 +948,7 @@ export default function InvestorDashboard() {
                       </div>
 
                       <div className="flex items-center justify-between mt-3 gap-2">
-                        <p className="font-cairo text-sm text-dark-gray">{project.amount}</p>
+                        <p className="font-cairo text-2xl font-black text-invest-blue tracking-tight" dir="ltr">{formatFundingAmountWithCurrency(project.amount)}</p>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openContactRequestModal(project)}
@@ -1276,7 +1295,7 @@ export default function InvestorDashboard() {
                 <div className="grid md:grid-cols-3 gap-3 mt-4">
                   <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">القطاع: {selectedProject.sector}</div>
                   <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">المرحلة: {selectedProject.stage}</div>
-                  <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">الميزانية: {selectedProject.amount}</div>
+                  <div className="p-3 bg-light-gray rounded-lg font-cairo text-sm">الميزانية: <span className="font-bold text-invest-blue text-base" dir="ltr">{formatFundingAmountWithCurrency(selectedProject.amount)}</span></div>
                 </div>
                 <button
                   onClick={() => openContactRequestModal(selectedProject)}
