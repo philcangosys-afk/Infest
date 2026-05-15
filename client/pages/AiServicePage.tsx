@@ -21,41 +21,65 @@ const normalizeArabicDigits = (value: string) =>
     .replace(/٬/g, ",")
     .replace(/٫/g, ".");
 
+let pdfjsLibPromise: Promise<any> | null = null;
+
+const loadPdfJs = async () => {
+  if (pdfjsLibPromise) return pdfjsLibPromise;
+
+  pdfjsLibPromise = (async () => {
+    const lib = await import(/* @vite-ignore */ "https://esm.sh/pdfjs-dist@3.11.174/build/pdf.mjs");
+    lib.GlobalWorkerOptions.workerSrc = "https://esm.sh/pdfjs-dist@3.11.174/build/pdf.worker.mjs";
+    return lib;
+  })();
+
+  return pdfjsLibPromise;
+};
+
 const extractPdfText = async (file: File) => {
   const buffer = await file.arrayBuffer();
+
+  try {
+    const pdfjs = await loadPdfJs();
+    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) });
+    const pdf = await loadingTask.promise;
+    const pageTexts: string[] = [];
+
+    const totalPages = Math.min(pdf.numPages, 60);
+    for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageStrings = textContent.items
+        .map((item: any) => (typeof item.str === "string" ? item.str : ""))
+        .filter((item: string) => item.trim().length > 0);
+      if (pageStrings.length) {
+        pageTexts.push(pageStrings.join(" "));
+      }
+    }
+
+    if (pageTexts.length) {
+      return normalizeArabicDigits(pageTexts.join("\n")).replace(/[ \t]+/g, " ").trim();
+    }
+  } catch (error) {
+    console.warn("pdfjs extraction failed, falling back to raw text", error);
+  }
+
   const bytes = new Uint8Array(buffer);
   const binaryLatin = new TextDecoder("latin1").decode(bytes);
-  const binaryUtf8 = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-
   const chunks: string[] = [];
   const directTextRegex = /\(([^()]*)\)\s*Tj/g;
-  const arrayTextRegex = /\[(.*?)\]\s*TJ/g;
   let match: RegExpExecArray | null;
 
   while ((match = directTextRegex.exec(binaryLatin)) !== null) {
     const text = match[1]
       .replace(/\\n/g, " ")
       .replace(/\\r/g, " ")
-      .replace(/\\t/g, " ")
       .replace(/\\\(/g, "(")
       .replace(/\\\)/g, ")")
       .trim();
-
-    if (text.length > 1) {
-      chunks.push(text);
-    }
+    if (text.length > 1) chunks.push(text);
   }
 
-  while ((match = arrayTextRegex.exec(binaryLatin)) !== null) {
-    const inner = match[1];
-    const grouped = [...inner.matchAll(/\(([^()]*)\)/g)].map((item) => item[1].trim()).filter(Boolean);
-    if (grouped.length) {
-      chunks.push(grouped.join(" "));
-    }
-  }
-
-  const merged = `${chunks.join(" ")} ${binaryUtf8}`;
-  return normalizeArabicDigits(merged).replace(/\s+/g, " ").trim();
+  return normalizeArabicDigits(chunks.join(" ")).replace(/\s+/g, " ").trim();
 };
 
 const detectCurrencyHint = (rawText: string, summary: string) => {
