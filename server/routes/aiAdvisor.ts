@@ -11,6 +11,7 @@ type AdvisorRequestBody = {
   previousAnalysis?: string;
   pdfExtractedText?: string;
   pdfDetectedNumbers?: string[];
+  currencyHint?: { code?: string; label?: string };
 };
 
 const detectPreferredCurrency = (text: string) => {
@@ -37,6 +38,17 @@ const detectPreferredCurrency = (text: string) => {
   }
 
   return { code: "SDG", label: "الجنيه السوداني (ج.س)" };
+};
+
+const normalizeResultCurrency = (result: string, currencyCode: string) => {
+  if (currencyCode !== "SDG") return result;
+
+  return result
+    .replace(/\bUSD\b/gi, "ج.س")
+    .replace(/\bUS\s*DOLLAR\b/gi, "ج.س")
+    .replace(/\$/g, "ج.س")
+    .replace(/دولار\s*أمريكي/g, "ج.س")
+    .replace(/دولار/g, "ج.س");
 };
 
 const getServiceTitle = (role: AdvisorRole, service: string) => {
@@ -204,7 +216,23 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
   const extractedDocumentText = body.pdfExtractedText?.trim();
   const detectedFinancialSignals = (body.pdfDetectedNumbers ?? []).slice(0, 80);
   const currencySourceText = `${body.projectSummary ?? ""}\n${extractedDocumentText ?? ""}`;
-  const preferredCurrency = detectPreferredCurrency(currencySourceText);
+  const detectedCurrency = detectPreferredCurrency(currencySourceText);
+  const hintedCurrencyCode = (body.currencyHint?.code || "").toUpperCase();
+  const preferredCurrency = hintedCurrencyCode && ["SDG", "USD", "SAR", "AED", "EGP"].includes(hintedCurrencyCode)
+    ? {
+        code: hintedCurrencyCode,
+        label:
+          hintedCurrencyCode === "SDG"
+            ? "الجنيه السوداني (ج.س)"
+            : hintedCurrencyCode === "USD"
+              ? "الدولار الأمريكي (USD)"
+              : hintedCurrencyCode === "SAR"
+                ? "الريال السعودي (SAR)"
+                : hintedCurrencyCode === "AED"
+                  ? "الدرهم الإماراتي (AED)"
+                  : "الجنيه المصري (EGP)",
+      }
+    : detectedCurrency;
 
   const userPrompt = isFollowup
     ? [
@@ -227,7 +255,7 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
           : "لا توجد إشارات رقمية كافية مستخرجة تلقائياً.",
         body.question ? `سؤال المستخدم:\n${body.question}` : "",
         `العملة المطلوب الالتزام بها في جميع الأرقام: ${preferredCurrency.label}`,
-        "قاعدة إلزامية للعملة: استخدم نفس العملة الموجودة في ملف PDF. إذا لم تظهر عملة بوضوح فاعتمد الجنيه السوداني (ج.س).",
+        "قاعدة إلزامية للعملة: استخدم نفس العملة الموجودة في ملف PDF. إذا لم تظهر عملة بوضوح فاعتمد الجنيه السوداني (ج.س). ممنوع خلط العملات داخل نفس الجواب.",
         `تعليمات أسلوب التحليل:\n${serviceGuidance}`,
         service === "business_model"
           ? "في خدمة نموذج العمل: أخرج جداول رقمية نهائية (إيرادات/تكاليف/ربحية) مع مبالغ شهرية وسنوية ولا تكتفِ بالسرد الوصفي."
@@ -263,9 +291,10 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
       choices?: { message?: { content?: string } }[];
     };
 
-    const result = data.choices?.[0]?.message?.content?.trim();
+    const rawResult = data.choices?.[0]?.message?.content?.trim() || "لم يتمكن المستشار الذكي من إرجاع نتيجة.";
+    const result = normalizeResultCurrency(rawResult, preferredCurrency.code);
 
-    res.status(200).json({ result: result || "لم يتمكن المستشار الذكي من إرجاع نتيجة." });
+    res.status(200).json({ result });
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown server error",

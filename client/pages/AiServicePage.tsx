@@ -58,6 +58,32 @@ const extractPdfText = async (file: File) => {
   return normalizeArabicDigits(merged).replace(/\s+/g, " ").trim();
 };
 
+const detectCurrencyHint = (rawText: string, summary: string) => {
+  const text = normalizeArabicDigits(`${rawText} ${summary}`).toLowerCase();
+
+  if (/\b(sdg|ج\.?\s*س|جنيه\s*سوداني|جنيه)\b/i.test(text)) {
+    return { code: "SDG", label: "الجنيه السوداني (ج.س)" };
+  }
+
+  if (/\b(usd|دولار|\$)\b/i.test(text)) {
+    return { code: "USD", label: "الدولار الأمريكي (USD)" };
+  }
+
+  if (/\b(sar|ريال\s*سعودي|ريال)\b/i.test(text)) {
+    return { code: "SAR", label: "الريال السعودي (SAR)" };
+  }
+
+  if (/\b(aed|درهم\s*إماراتي|درهم)\b/i.test(text)) {
+    return { code: "AED", label: "الدرهم الإماراتي (AED)" };
+  }
+
+  if (/\b(egp|جنيه\s*مصري)\b/i.test(text)) {
+    return { code: "EGP", label: "الجنيه المصري (EGP)" };
+  }
+
+  return { code: "SDG", label: "الجنيه السوداني (ج.س)" };
+};
+
 const extractFinancialSignals = (rawText: string, summary: string) => {
   const text = normalizeArabicDigits(`${rawText} ${summary}`);
   const signals = new Set<string>();
@@ -161,6 +187,7 @@ export default function AiServicePage() {
       const extractedPdfText = question ? "" : await extractPdfText(pdfFile);
       const boundedExtractedPdfText = extractedPdfText.slice(0, 30000);
       const detectedFinancialSignals = question ? [] : extractFinancialSignals(boundedExtractedPdfText, projectSummary);
+      const currencyHint = question ? undefined : detectCurrencyHint(boundedExtractedPdfText, projectSummary);
 
       const response = await fetch("/api/ai-advisor", {
         method: "POST",
@@ -174,6 +201,7 @@ export default function AiServicePage() {
           previousAnalysis: analysisResult || undefined,
           pdfExtractedText: boundedExtractedPdfText || undefined,
           pdfDetectedNumbers: detectedFinancialSignals.length ? detectedFinancialSignals : undefined,
+          currencyHint: currencyHint || undefined,
         }),
       });
 
