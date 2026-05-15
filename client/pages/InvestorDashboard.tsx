@@ -772,6 +772,13 @@ export default function InvestorDashboard() {
             <Users className="w-4 h-4 text-sky-300" />
             <span>منتدي الدعم</span>
           </button>
+          <button
+            onClick={() => navigate("/social-responsibility")}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-cairo font-semibold text-sm text-white/80 hover:bg-white/5 hover:text-white transition"
+          >
+            <Handshake className="w-4 h-4 text-emerald-300" />
+            <span>المسئولية المجتمعية</span>
+          </button>
         </div>
 
         <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/0 border border-white/10">
