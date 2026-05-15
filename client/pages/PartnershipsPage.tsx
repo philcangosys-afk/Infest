@@ -1,6 +1,7 @@
 import { ArrowRight, Building2, Handshake, Mail, MapPin, Phone } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Partner = {
   id: "irada" | "farmers-bank";
@@ -57,7 +58,33 @@ export default function PartnershipsPage() {
   );
 
   const [selectedPartnerId, setSelectedPartnerId] = useState<Partner["id"]>("irada");
+  const [dashboardLink, setDashboardLink] = useState<{ to: string; label: string }>({
+    to: "/investor-dashboard",
+    label: "لوحة المستثمر",
+  });
   const selectedPartner = partners.find((partner) => partner.id === selectedPartnerId) ?? partners[0];
+
+  useEffect(() => {
+    const resolveDashboardLink = async () => {
+      if (!isSupabaseConfigured) return;
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+
+      if (profile?.role === "entrepreneur") {
+        setDashboardLink({ to: "/dashboard", label: "لوحة رائد الأعمال" });
+      } else {
+        setDashboardLink({ to: "/investor-dashboard", label: "لوحة المستثمر" });
+      }
+    };
+
+    resolveDashboardLink();
+  }, []);
 
   return (
     <div className="min-h-screen bg-light-gray" dir="rtl">
@@ -73,20 +100,12 @@ export default function PartnershipsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/dashboard"
-              className="px-4 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo font-semibold hover:bg-white transition"
-            >
-              لوحة رائد الأعمال
-            </Link>
-            <Link
-              to="/investor-dashboard"
-              className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
-            >
-              لوحة المستثمر
-            </Link>
-          </div>
+          <Link
+            to={dashboardLink.to}
+            className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
+          >
+            {dashboardLink.label}
+          </Link>
         </div>
       </header>
 

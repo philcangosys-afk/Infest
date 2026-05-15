@@ -10,7 +10,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -73,6 +73,32 @@ export default function MyAdvisorPage() {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [pageNotice, setPageNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [dashboardLink, setDashboardLink] = useState<{ to: string; label: string }>({
+    to: "/investor-dashboard",
+    label: "لوحة المستثمر",
+  });
+
+  useEffect(() => {
+    const resolveDashboardLink = async () => {
+      if (!isSupabaseConfigured) return;
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+
+      if (profile?.role === "entrepreneur") {
+        setDashboardLink({ to: "/dashboard", label: "لوحة رائد الأعمال" });
+      } else {
+        setDashboardLink({ to: "/investor-dashboard", label: "لوحة المستثمر" });
+      }
+    };
+
+    resolveDashboardLink();
+  }, []);
 
   const closeRequestModal = () => {
     setSelectedAdvisor(null);
@@ -156,20 +182,12 @@ export default function MyAdvisorPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/dashboard"
-              className="px-4 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo font-semibold hover:bg-white transition"
-            >
-              لوحة رائد الأعمال
-            </Link>
-            <Link
-              to="/investor-dashboard"
-              className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
-            >
-              لوحة المستثمر
-            </Link>
-          </div>
+          <Link
+            to={dashboardLink.to}
+            className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
+          >
+            {dashboardLink.label}
+          </Link>
         </div>
       </header>
 

@@ -60,6 +60,10 @@ export default function CommunitySupportPage() {
   const [sending, setSending] = useState(false);
   const [pageNotice, setPageNotice] = useState("");
   const [storageMode, setStorageMode] = useState<ForumStorageMode>("community_table");
+  const [dashboardLink, setDashboardLink] = useState<{ to: string; label: string }>({
+    to: "/investor-dashboard",
+    label: "لوحة المستثمر",
+  });
 
   const loadForumMessages = async (silent = false) => {
     if (storageMode === "local_fallback" && silent) {
@@ -174,8 +178,14 @@ export default function CommunitySupportPage() {
 
       setCurrentUserId(user.id);
 
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name, role").eq("id", user.id).single();
       const senderName = profile?.full_name?.trim() || user.email || "عضو المنصة";
+
+      if (profile?.role === "entrepreneur") {
+        setDashboardLink({ to: "/dashboard", label: "لوحة رائد الأعمال" });
+      } else {
+        setDashboardLink({ to: "/investor-dashboard", label: "لوحة المستثمر" });
+      }
       setCurrentUserName(senderName);
 
       await loadForumMessages();
@@ -323,20 +333,12 @@ export default function CommunitySupportPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/dashboard"
-              className="px-4 py-2 rounded-lg border border-light-gray text-dark-gray font-cairo font-semibold hover:bg-white transition"
-            >
-              لوحة رائد الأعمال
-            </Link>
-            <Link
-              to="/investor-dashboard"
-              className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
-            >
-              لوحة المستثمر
-            </Link>
-          </div>
+          <Link
+            to={dashboardLink.to}
+            className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold hover:bg-blue-900 transition"
+          >
+            {dashboardLink.label}
+          </Link>
         </div>
       </header>
 
