@@ -159,7 +159,8 @@ export default function AiServicePage() {
 
     try {
       const extractedPdfText = question ? "" : await extractPdfText(pdfFile);
-      const detectedFinancialSignals = question ? [] : extractFinancialSignals(extractedPdfText, projectSummary);
+      const boundedExtractedPdfText = extractedPdfText.slice(0, 30000);
+      const detectedFinancialSignals = question ? [] : extractFinancialSignals(boundedExtractedPdfText, projectSummary);
 
       const response = await fetch("/api/ai-advisor", {
         method: "POST",
@@ -171,7 +172,7 @@ export default function AiServicePage() {
           projectSummary,
           question,
           previousAnalysis: analysisResult || undefined,
-          pdfExtractedText: extractedPdfText || undefined,
+          pdfExtractedText: boundedExtractedPdfText || undefined,
           pdfDetectedNumbers: detectedFinancialSignals.length ? detectedFinancialSignals : undefined,
         }),
       });
