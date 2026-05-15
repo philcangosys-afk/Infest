@@ -671,7 +671,7 @@ export default function EntrepreneurDashboard() {
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-cairo font-semibold text-sm text-white/80 hover:bg-white/5 hover:text-white transition"
           >
             <UsersRound className="w-4 h-4 text-sky-300" />
-            <span>منتدي الدعم المجتمعي</span>
+            <span>منتدي الدعم</span>
           </button>
         </div>
 
@@ -797,12 +797,11 @@ export default function EntrepreneurDashboard() {
                   </select>
                 </div>
 
-                <div className="grid md:grid-cols-4 gap-2 mb-4">
+                <div className="grid md:grid-cols-3 gap-2 mb-4">
                   {[
                     { label: "تحسين عرض المشروع", route: "/ai-service/entrepreneur/pitch" },
                     { label: "خطة مالية أولية", route: "/ai-service/entrepreneur/financial" },
                     { label: "نموذج العمل", route: "/ai-service/entrepreneur/business_model" },
-                    { label: "المسئولية المجتمعية", route: "/social-responsibility" },
                   ].map((option) => (
                     <button
                       key={option.label}
