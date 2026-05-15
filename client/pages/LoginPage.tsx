@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TrendingUp, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,9 +17,7 @@ export default function LoginPage() {
     const checkSession = async () => {
       if (!isSupabaseConfigured) return;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await getSafeUser();
 
       if (!user) return;
 

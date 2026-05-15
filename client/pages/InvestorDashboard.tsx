@@ -19,7 +19,7 @@ import {
   Upload,
 } from "lucide-react";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type InvestorSection = "dashboard" | "available" | "favorites" | "requests" | "messages" | "profile";
 
@@ -163,9 +163,7 @@ export default function InvestorDashboard() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser();
 
     if (!user) {
       navigate("/login?role=investor");

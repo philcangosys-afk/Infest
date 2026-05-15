@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Search, TrendingUp, Heart, Filter, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type ProjectCard = {
   id: number;
@@ -92,9 +92,7 @@ export default function BrowseProjects() {
         })),
       );
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await getSafeUser();
 
       if (user) {
         const { data: favorites } = await supabase.from("favorites").select("project_id").eq("investor_id", user.id);
@@ -150,9 +148,7 @@ export default function BrowseProjects() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser();
 
     if (!user) {
       setErrorMessage("سجّل الدخول كمستثمر لحفظ المشاريع في اهتماماتك.");

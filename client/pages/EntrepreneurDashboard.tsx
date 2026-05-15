@@ -21,7 +21,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type SectionKey = "dashboard" | "projects" | "requests" | "messages" | "profile";
 
@@ -154,9 +154,7 @@ export default function EntrepreneurDashboard() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser();
 
     if (!user) {
       navigate("/login?role=entrepreneur");

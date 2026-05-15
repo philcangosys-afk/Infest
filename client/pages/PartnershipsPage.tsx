@@ -1,7 +1,7 @@
 import { ArrowRight, Building2, Handshake, Mail, MapPin, Phone } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Partner = {
   id: "irada" | "farmers-bank";
@@ -68,9 +68,7 @@ export default function PartnershipsPage() {
     const resolveDashboardLink = async () => {
       if (!isSupabaseConfigured) return;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await getSafeUser();
 
       if (!user) return;
 

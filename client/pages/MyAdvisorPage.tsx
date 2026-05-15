@@ -13,7 +13,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Advisor = {
   id: number;
@@ -71,9 +71,7 @@ export default function MyAdvisorPage() {
     const resolveDashboardLink = async () => {
       if (!isSupabaseConfigured) return;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await getSafeUser();
 
       if (!user) return;
 
@@ -112,9 +110,7 @@ export default function MyAdvisorPage() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await getSafeUser();
 
     if (!user) {
       const message = "يجب تسجيل الدخول أولاً لإرسال طلب استشارة.";

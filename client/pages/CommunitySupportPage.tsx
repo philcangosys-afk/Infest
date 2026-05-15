@@ -2,7 +2,7 @@ import { MessageCircle, Send, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type ForumMessage = {
   id: number;
@@ -166,9 +166,7 @@ export default function CommunitySupportPage() {
         return;
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await getSafeUser();
 
       if (!user) {
         toast.error("يجب تسجيل الدخول للدخول إلى منتدي الدعم المجتمعي.");

@@ -1,7 +1,7 @@
 import { CheckCircle2, Crown, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getSafeUser, isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type MembershipPlan = {
   id: "basic" | "plus" | "elite";
@@ -54,9 +54,7 @@ export default function MembershipPage() {
     const resolveDashboardLink = async () => {
       if (!isSupabaseConfigured) return;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await getSafeUser();
 
       if (!user) return;
 
