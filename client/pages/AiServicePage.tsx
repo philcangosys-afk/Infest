@@ -15,16 +15,24 @@ type FollowupItem = {
   answer: string;
 };
 
+const normalizeArabicDigits = (value: string) =>
+  value
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/٬/g, ",")
+    .replace(/٫/g, ".");
+
 const extractPdfText = async (file: File) => {
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
-  const binaryText = new TextDecoder("latin1").decode(bytes);
+  const binaryLatin = new TextDecoder("latin1").decode(bytes);
+  const binaryUtf8 = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
 
   const chunks: string[] = [];
-  const regex = /\(([^()]*)\)\s*Tj/g;
+  const directTextRegex = /\(([^()]*)\)\s*Tj/g;
+  const arrayTextRegex = /\[(.*?)\]\s*TJ/g;
   let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(binaryText)) !== null) {
+  while ((match = directTextRegex.exec(binaryLatin)) !== null) {
     const text = match[1]
       .replace(/\\n/g, " ")
       .replace(/\\r/g, " ")
@@ -33,12 +41,44 @@ const extractPdfText = async (file: File) => {
       .replace(/\\\)/g, ")")
       .trim();
 
-    if (text.length > 2) {
+    if (text.length > 1) {
       chunks.push(text);
     }
   }
 
-  return chunks.join(" ").replace(/\s+/g, " ").trim();
+  while ((match = arrayTextRegex.exec(binaryLatin)) !== null) {
+    const inner = match[1];
+    const grouped = [...inner.matchAll(/\(([^()]*)\)/g)].map((item) => item[1].trim()).filter(Boolean);
+    if (grouped.length) {
+      chunks.push(grouped.join(" "));
+    }
+  }
+
+  const merged = `${chunks.join(" ")} ${binaryUtf8}`;
+  return normalizeArabicDigits(merged).replace(/\s+/g, " ").trim();
+};
+
+const extractFinancialSignals = (rawText: string, summary: string) => {
+  const text = normalizeArabicDigits(`${rawText} ${summary}`);
+  const signals = new Set<string>();
+
+  const amountRegex = /(\d[\d,.]{0,15})\s*(ج\.?س|جنيه|جنيهًا|sdg|\$|usd|ريال|دينار)/gi;
+  const percentageRegex = /(\d+(?:\.\d+)?)\s*%/g;
+  const keywordContextRegex = /([^.!?\n]{0,40}(?:ايراد|إيراد|تكلفة|تكاليف|مصروف|رسوم|هامش|ربح|خسارة|نقطة التعادل|اشتراك|عمولة|نمو|مبيعات)[^.!?\n]{0,60})/gi;
+
+  for (const matchItem of text.matchAll(amountRegex)) {
+    signals.add(`${matchItem[1]} ${matchItem[2]}`);
+  }
+
+  for (const matchItem of text.matchAll(percentageRegex)) {
+    signals.add(`${matchItem[1]}%`);
+  }
+
+  for (const matchItem of text.matchAll(keywordContextRegex)) {
+    signals.add(matchItem[1].replace(/\s+/g, " ").trim());
+  }
+
+  return Array.from(signals).slice(0, 80);
 };
 
 const CONFIG: Record<Role, Record<string, ServiceConfig>> = {
@@ -119,6 +159,7 @@ export default function AiServicePage() {
 
     try {
       const extractedPdfText = question ? "" : await extractPdfText(pdfFile);
+      const detectedFinancialSignals = question ? [] : extractFinancialSignals(extractedPdfText, projectSummary);
 
       const response = await fetch("/api/ai-advisor", {
         method: "POST",
@@ -131,6 +172,7 @@ export default function AiServicePage() {
           question,
           previousAnalysis: analysisResult || undefined,
           pdfExtractedText: extractedPdfText || undefined,
+          pdfDetectedNumbers: detectedFinancialSignals.length ? detectedFinancialSignals : undefined,
         }),
       });
 
