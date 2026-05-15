@@ -15,6 +15,32 @@ type FollowupItem = {
   answer: string;
 };
 
+const extractPdfText = async (file: File) => {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const binaryText = new TextDecoder("latin1").decode(bytes);
+
+  const chunks: string[] = [];
+  const regex = /\(([^()]*)\)\s*Tj/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(binaryText)) !== null) {
+    const text = match[1]
+      .replace(/\\n/g, " ")
+      .replace(/\\r/g, " ")
+      .replace(/\\t/g, " ")
+      .replace(/\\\(/g, "(")
+      .replace(/\\\)/g, ")")
+      .trim();
+
+    if (text.length > 2) {
+      chunks.push(text);
+    }
+  }
+
+  return chunks.join(" ").replace(/\s+/g, " ").trim();
+};
+
 const CONFIG: Record<Role, Record<string, ServiceConfig>> = {
   investor: {
     feasibility: {
@@ -92,6 +118,8 @@ export default function AiServicePage() {
     setErrorMessage("");
 
     try {
+      const extractedPdfText = question ? "" : await extractPdfText(pdfFile);
+
       const response = await fetch("/api/ai-advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,6 +130,7 @@ export default function AiServicePage() {
           projectSummary,
           question,
           previousAnalysis: analysisResult || undefined,
+          pdfExtractedText: extractedPdfText || undefined,
         }),
       });
 
