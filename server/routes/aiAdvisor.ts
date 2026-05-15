@@ -13,6 +13,32 @@ type AdvisorRequestBody = {
   pdfDetectedNumbers?: string[];
 };
 
+const detectPreferredCurrency = (text: string) => {
+  const normalized = text.toLowerCase();
+
+  if (/\b(sdg|sudanese pound|ج\.?\s*س|جنيه\s*سوداني|جنيه سوداني)\b/i.test(normalized)) {
+    return { code: "SDG", label: "الجنيه السوداني (ج.س)" };
+  }
+
+  if (/\b(usd|us\s*dollar|دولار|\$)\b/i.test(normalized)) {
+    return { code: "USD", label: "الدولار الأمريكي (USD)" };
+  }
+
+  if (/\b(sar|ريال\s*سعودي|ريال)\b/i.test(normalized)) {
+    return { code: "SAR", label: "الريال السعودي (SAR)" };
+  }
+
+  if (/\b(aed|درهم\s*إماراتي|درهم)\b/i.test(normalized)) {
+    return { code: "AED", label: "الدرهم الإماراتي (AED)" };
+  }
+
+  if (/\b(egp|جنيه\s*مصري)\b/i.test(normalized)) {
+    return { code: "EGP", label: "الجنيه المصري (EGP)" };
+  }
+
+  return { code: "SDG", label: "الجنيه السوداني (ج.س)" };
+};
+
 const getServiceTitle = (role: AdvisorRole, service: string) => {
   if (role === "investor") {
     if (service === "feasibility") return "تحليل جدوى مشروع";
@@ -72,6 +98,7 @@ const getServiceGuidance = (role: AdvisorRole, service: string) => {
       "11) جدول حسابات واضح بصيغة (المعادلة = الناتج) لثلاثة بنود على الأقل.",
       "اعتمد أولاً على أرقام الدراسة المرفوعة والإشارات المالية المستخرجة. إذا غاب رقم حرج، أنشئ تقديراً محافظاً مع توضيح أنه [افتراض] ثم اكمل الحسابات بأرقام فعلية.",
       "ممنوع الاكتفاء بعبارات: غير متوفر فقط. لازم تقدم أرقام نهائية مع تمييز الأرقام الافتراضية بوضوح.",
+      "صيغة العملة إلزامية: اكتب كل المبالغ بنفس العملة المستخرجة من ملف PDF، وإن لم تظهر عملة واضحة استخدم الجنيه السوداني (ج.س).",
     ].join("\n");
   }
 
@@ -176,6 +203,8 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
 
   const extractedDocumentText = body.pdfExtractedText?.trim();
   const detectedFinancialSignals = (body.pdfDetectedNumbers ?? []).slice(0, 80);
+  const currencySourceText = `${body.projectSummary ?? ""}\n${extractedDocumentText ?? ""}`;
+  const preferredCurrency = detectPreferredCurrency(currencySourceText);
 
   const userPrompt = isFollowup
     ? [
@@ -197,6 +226,8 @@ export const handleAiAdvisor: RequestHandler = async (req, res) => {
           ? `إشارات مالية رقمية مستخرجة مباشرة من الدراسة:\n- ${detectedFinancialSignals.join("\n- ")}`
           : "لا توجد إشارات رقمية كافية مستخرجة تلقائياً.",
         body.question ? `سؤال المستخدم:\n${body.question}` : "",
+        `العملة المطلوب الالتزام بها في جميع الأرقام: ${preferredCurrency.label}`,
+        "قاعدة إلزامية للعملة: استخدم نفس العملة الموجودة في ملف PDF. إذا لم تظهر عملة بوضوح فاعتمد الجنيه السوداني (ج.س).",
         `تعليمات أسلوب التحليل:\n${serviceGuidance}`,
         service === "business_model"
           ? "في خدمة نموذج العمل: أخرج جداول رقمية نهائية (إيرادات/تكاليف/ربحية) مع مبالغ شهرية وسنوية ولا تكتفِ بالسرد الوصفي."
