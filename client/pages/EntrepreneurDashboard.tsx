@@ -797,11 +797,12 @@ export default function EntrepreneurDashboard() {
                   </select>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-2 mb-4">
+                <div className="grid md:grid-cols-4 gap-2 mb-4">
                   {[
                     { label: "تحسين عرض المشروع", route: "/ai-service/entrepreneur/pitch" },
                     { label: "خطة مالية أولية", route: "/ai-service/entrepreneur/financial" },
                     { label: "نموذج العمل", route: "/ai-service/entrepreneur/business_model" },
+                    { label: "المسئولية المجتمعية", route: "/social-responsibility" },
                   ].map((option) => (
                     <button
                       key={option.label}

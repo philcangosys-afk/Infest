@@ -877,12 +877,13 @@ export default function InvestorDashboard() {
                   </span>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">
                   {[
-                    { title: "تحليل جدوى مشروع", route: "/ai-service/investor/feasibility" },
-                    { title: "تقييم مخاطر الاستثمار", route: "/ai-service/investor/risk" },
-                    { title: "حساب العائد المتوقع", route: "/ai-service/investor/returns" },
-                    { title: "نموذج العمل", route: "/ai-service/investor/business_model" },
+                    { title: "تحليل جدوى مشروع", route: "/ai-service/investor/feasibility", paid: true },
+                    { title: "تقييم مخاطر الاستثمار", route: "/ai-service/investor/risk", paid: true },
+                    { title: "حساب العائد المتوقع", route: "/ai-service/investor/returns", paid: true },
+                    { title: "نموذج العمل", route: "/ai-service/investor/business_model", paid: true },
+                    { title: "المسئولية المجتمعية", route: "/social-responsibility", paid: false },
                   ].map((serviceItem) => (
                     <button
                       key={serviceItem.title}
@@ -890,7 +891,7 @@ export default function InvestorDashboard() {
                       className="border border-light-gray rounded-xl p-4 text-right hover:border-invest-teal hover:bg-light-gray transition"
                     >
                       <p className="font-cairo font-semibold text-sm text-text-dark">{serviceItem.title}</p>
-                      <p className="font-cairo text-xs text-dark-gray mt-1">خدمة مدفوعة</p>
+                      <p className="font-cairo text-xs text-dark-gray mt-1">{serviceItem.paid ? "خدمة مدفوعة" : "مبادرة مجتمعية"}</p>
                     </button>
                   ))}
                 </div>
