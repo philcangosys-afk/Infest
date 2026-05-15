@@ -619,51 +619,69 @@ export default function EntrepreneurDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-light-gray" dir="rtl">
-      <div className="fixed right-0 top-0 bottom-0 w-64 bg-invest-blue text-white p-6 overflow-y-auto">
-        <Link to="/" className="flex items-center gap-2 mb-12">
-          <div className="w-10 h-10 bg-invest-teal rounded-lg flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-light-gray via-white to-light-gray" dir="rtl">
+      <div className="fixed right-0 top-0 bottom-0 w-64 bg-gradient-to-b from-invest-blue via-[#0c2a52] to-[#081f40] text-white p-5 overflow-y-auto border-l border-white/5 shadow-2xl">
+        <Link to="/" className="flex items-center gap-3 mb-10 group">
+          <div className="w-11 h-11 bg-gradient-to-br from-invest-teal to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
-          <span className="font-cairo font-bold text-lg">Nile Invest AI</span>
+          <div>
+            <span className="font-cairo font-bold text-base block leading-none">Nile Invest AI</span>
+            <span className="font-cairo text-[10px] text-white/60">لوحة رائد الأعمال</span>
+          </div>
         </Link>
 
-        <nav className="space-y-3 mb-4">
+        <p className="font-cairo text-[10px] font-bold tracking-widest text-white/40 px-2 mb-2">القائمة الرئيسية</p>
+        <nav className="space-y-1.5 mb-2">
           {sidebarItems.map((item) => (
             <button
               key={item.key}
               onClick={() => setActiveSection(item.key)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold transition ${
-                activeSection === item.key ? "bg-invest-teal text-invest-blue" : "text-white hover:bg-invest-blue/80"
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-cairo font-semibold text-sm transition-all duration-200 relative overflow-hidden ${
+                activeSection === item.key
+                  ? "bg-gradient-to-l from-invest-teal to-emerald-500 text-white shadow-lg ring-1 ring-white/10"
+                  : "text-white/80 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
+              {activeSection === item.key && (
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/90 rounded-l-full" />
+              )}
+              <span className="text-base">{item.icon}</span>
               <span>{item.label}</span>
             </button>
           ))}
         </nav>
 
-        <div className="space-y-2 border-t border-white/20 pt-4">
+        <p className="font-cairo text-[10px] font-bold tracking-widest text-white/40 px-2 mt-6 mb-2">خدمات تفاعلية</p>
+        <div className="space-y-1.5">
           <button
             onClick={() => navigate("/my-advisor")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold text-white hover:bg-invest-blue/80 transition"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-cairo font-semibold text-sm text-white/80 hover:bg-white/5 hover:text-white transition"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 text-amber-300" />
             <span>مستشارك الخاص</span>
           </button>
           <button
             onClick={() => navigate("/partnerships")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold text-white hover:bg-invest-blue/80 transition"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-cairo font-semibold text-sm text-white/80 hover:bg-white/5 hover:text-white transition"
           >
-            <Handshake className="w-4 h-4" />
+            <Handshake className="w-4 h-4 text-emerald-300" />
             <span>الشراكات</span>
           </button>
           <button
             onClick={() => navigate("/community-support")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-cairo font-semibold text-white hover:bg-invest-blue/80 transition"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-cairo font-semibold text-sm text-white/80 hover:bg-white/5 hover:text-white transition"
           >
-            <UsersRound className="w-4 h-4" />
+            <UsersRound className="w-4 h-4 text-sky-300" />
             <span>منتدي الدعم المجتمعي</span>
+          </button>
+        </div>
+
+        <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/0 border border-white/10">
+          <p className="font-cairo text-[11px] text-white/70 mb-2">طوّر مشاريعك</p>
+          <p className="font-cairo font-bold text-sm mb-3">انضم لباقة Plus</p>
+          <button onClick={() => navigate("/membership")} className="w-full text-xs font-cairo font-bold py-2 rounded-lg bg-white text-invest-blue hover:bg-invest-teal hover:text-white transition">
+            عرض الباقات
           </button>
         </div>
 
@@ -672,19 +690,22 @@ export default function EntrepreneurDashboard() {
             await supabase.auth.signOut();
             navigate("/");
           }}
-          className="w-full flex items-center gap-2 px-4 py-3 text-white hover:bg-invest-blue/80 rounded-lg font-cairo font-semibold transition mt-6"
+          className="w-full flex items-center gap-2 px-3.5 py-2.5 text-white/80 hover:bg-invest-red/20 hover:text-white rounded-xl font-cairo font-semibold text-sm transition mt-4"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4" />
           <span>تسجيل الخروج</span>
         </button>
       </div>
 
       <div className="mr-64 min-h-screen">
-        <header className="bg-white border-b border-light-gray sticky top-0 z-40">
+        <header className="bg-white/80 backdrop-blur-xl border-b border-light-gray sticky top-0 z-40 shadow-sm">
           <div className="px-8 h-20 flex items-center justify-between">
             <div>
-              <h1 className="font-cairo font-bold text-2xl text-invest-blue">مرحباً بك، {profileForm.fullName || "رائد أعمال"}! 👋</h1>
-              <p className="font-cairo text-sm text-dark-gray">{sectionTitle[activeSection]}</p>
+              <h1 className="font-cairo font-bold text-2xl text-invest-blue tracking-tight">مرحباً بك، {profileForm.fullName || "رائد أعمال"}! 👋</h1>
+              <p className="font-cairo text-sm text-dark-gray flex items-center gap-2">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {sectionTitle[activeSection]}
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -714,19 +735,22 @@ export default function EntrepreneurDashboard() {
 
           {!loading && activeSection === "dashboard" && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                  { icon: Briefcase, label: "عدد مشاريعي", value: String(projects.length) },
-                  { icon: Users, label: "طلبات جديدة", value: String(requests.length) },
-                  { icon: MessageCircle, label: "رسائل جديدة", value: "0" },
-                  { icon: Heart, label: "نسبة التحقق", value: `${verificationPercent}%`, verification: true },
+                  { icon: Briefcase, label: "عدد مشاريعي", value: String(projects.length), grad: "from-emerald-500 to-teal-600" },
+                  { icon: Users, label: "طلبات جديدة", value: String(requests.length), grad: "from-sky-500 to-blue-600" },
+                  { icon: MessageCircle, label: "رسائل جديدة", value: "0", grad: "from-violet-500 to-fuchsia-600" },
+                  { icon: Heart, label: "نسبة التحقق", value: `${verificationPercent}%`, verification: true, grad: "from-rose-500 to-pink-600" },
                 ].map((stat, idx) => {
                   const Icon = stat.icon;
                   return (
-                    <div key={idx} className="bg-white rounded-2xl p-6 shadow-lg">
-                      <Icon className="w-8 h-8 text-invest-teal mb-3" />
-                      <p className="font-cairo text-sm text-dark-gray">{stat.label}</p>
-                      <p className="font-cairo font-bold text-4xl text-text-dark">{stat.value}</p>
+                    <div key={idx} className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-2xl border border-light-gray hover:border-invest-teal/30 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                      <div className={`absolute -top-12 -left-12 w-28 h-28 rounded-full bg-gradient-to-br ${stat.grad} opacity-10 blur-2xl group-hover:opacity-20 transition`} />
+                      <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.grad} flex items-center justify-center shadow-md mb-3`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <p className="font-cairo text-xs text-dark-gray mb-1">{stat.label}</p>
+                      <p className="font-cairo font-bold text-3xl text-text-dark tracking-tight">{stat.value}</p>
                       {stat.verification && isVerificationComplete && (
                         <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-invest-teal/10 text-invest-teal font-cairo text-xs font-bold">
                           <Award className="w-3.5 h-3.5" />
