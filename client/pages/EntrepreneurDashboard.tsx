@@ -1227,7 +1227,7 @@ export default function EntrepreneurDashboard() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 font-cairo text-sm font-semibold text-invest-blue hover:text-blue-900"
             >
-              LinkedIn Profile - Mona Shouna
+              LinkedIn - Nile Invest AI
             </a>
           </div>
         </footer>
