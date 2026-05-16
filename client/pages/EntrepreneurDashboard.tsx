@@ -1202,6 +1202,35 @@ export default function EntrepreneurDashboard() {
             </div>
           )}
         </div>
+
+        <footer className="px-8 pb-8">
+          <div className="rounded-2xl border border-light-gray bg-white p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h3 className="font-cairo font-bold text-lg text-invest-blue">التواصل مع منصة نايل انفيست</h3>
+              <a
+                href="mailto:contact@nileinvest.sd"
+                className="px-4 py-2 rounded-lg bg-invest-blue text-white font-cairo font-semibold text-sm hover:bg-blue-900 transition"
+              >
+                Contact Nile Invest Team
+              </a>
+            </div>
+            <p className="font-cairo text-sm text-dark-gray">للتواصل بخصوص المشاريع، التمويل، والدعم المؤسسي عبر المنصة، استخدم معلومات التواصل التالية:</p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <p className="font-cairo text-sm text-text-dark"><span className="font-bold">Landline:</span> +249 183 780 100</p>
+              <p className="font-cairo text-sm text-text-dark"><span className="font-bold">Sudan Mobile:</span> +249 96 565 6367</p>
+              <p className="font-cairo text-sm text-text-dark"><span className="font-bold">Address:</span> الخرطوم - الرياض</p>
+              <p className="font-cairo text-sm text-text-dark"><span className="font-bold">Email:</span> contact@nileinvest.sd</p>
+            </div>
+            <a
+              href="https://www.linkedin.com/in/mona-shouna-1853aa5b?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 font-cairo text-sm font-semibold text-invest-blue hover:text-blue-900"
+            >
+              LinkedIn Profile - Mona Shouna
+            </a>
+          </div>
+        </footer>
       </div>
     </div>
   );
