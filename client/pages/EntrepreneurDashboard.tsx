@@ -1222,7 +1222,7 @@ export default function EntrepreneurDashboard() {
               <p className="font-cairo text-sm text-text-dark"><span className="font-bold">Email:</span> contact@nileinvest.sd</p>
             </div>
             <a
-              href="https://www.linkedin.com/in/mona-shouna-1853aa5b?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
+              href="https://www.linkedin.com/company/nile-invest-ai/"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 font-cairo text-sm font-semibold text-invest-blue hover:text-blue-900"
